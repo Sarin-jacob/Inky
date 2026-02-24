@@ -36,7 +36,7 @@ app = Flask(__name__)
 # --- HARDWARE SETUP ---
 DHT_PIN = board.D5
 try:
-    dht_sensor = adafruit_dht.DHT22(DHT_PIN) 
+    dht_sensor = adafruit_dht.DHT11(DHT_PIN) 
 except Exception:
     pass # Handle gracefully if missing
 
