@@ -43,11 +43,11 @@ def HandleException(et, val, tb):
     iw.text(0, 10, "EXCEPTION IN PROGRAM", 'robotoBlack18', 'black')
     iw.text(0, 30, str(val), 'robotoBlack18', 'black')
     iw.text(0, 60, "Please run program from command line interactivly to resolve", 'robotoBlack18', 'black')
-    print "EXCEPTION IN PROGRAM =================================="
-    print val
-    print et
-    print tb
-    print "END EXCEPTION ========================================="
+    print("EXCEPTION IN PROGRAM ==================================")
+    print(val)
+    print(et)
+    print(tb)
+    print("END EXCEPTION =========================================")
     iw.display(rotation)
 
 sys.excepthook = HandleException
