@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 from PIL import Image, ImageDraw, ImageFont
 
 # Import your local driver
-from driver import epd7in5b
+from driver.epd7in5b_V2 import EPD
 
 # Hardware Pins
 DHT_PIN = board.D5
@@ -37,7 +37,7 @@ def test_display():
     print("\n--- 2. Testing E-Ink Display ---")
     try:
         print("Initializing EPD...")
-        epd = epd7in5b.EPD()
+        epd = EPD()
         epd.init()
 
         print("Creating test image...")
