@@ -251,6 +251,13 @@ def get_sensor_string():
             time.sleep(1.0)
     return sensor_str
 
+def get_partial_buffer(img):
+    """Bypasses the driver's strict 800x480 size limit for cropped updates"""
+    buf = bytearray(img.convert('1').tobytes('raw'))
+    for i in range(len(buf)):
+        buf[i] ^= 0xFF # Invert bits for the e-ink hardware
+    return buf
+
 def load_fonts():
     try:
         return ImageFont.truetype("fonts/roboto/Roboto-Black.ttf", 64), ImageFont.truetype("fonts/roboto/Roboto-Regular.ttf", 36)
@@ -267,13 +274,17 @@ def draw_partial_update(time_str, sensor_str):
     img_clock = Image.new('1', (800, 120), 255)
     draw_clock = ImageDraw.Draw(img_clock)
     draw_clock.text((40, 60 - 40), time_str, font=font_large, fill=0)
-    epd.display_Partial(epd.getbuffer(img_clock), 0, 40, 800, 160)
+    
+    # Use our custom buffer converter instead of epd.getbuffer()
+    epd.display_Partial(get_partial_buffer(img_clock), 0, 40, 800, 160)
 
     # 2. Update Sensor Box (X: 0->800, Y: 380->480)
     img_sensor = Image.new('1', (800, 100), 255)
     draw_sensor = ImageDraw.Draw(img_sensor)
     draw_sensor.text((40, 400 - 380), sensor_str, font=font_med, fill=0)
-    epd.display_Partial(epd.getbuffer(img_sensor), 0, 380, 800, 480)
+    
+    # Use our custom buffer converter instead of epd.getbuffer()
+    epd.display_Partial(get_partial_buffer(img_sensor), 0, 380, 800, 480)
 
     epd.sleep()
 
