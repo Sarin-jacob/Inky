@@ -32,7 +32,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 # Must run as root to access hardware SPI and GPIO edge detection
-User=Inky
+User=inky
 WorkingDirectory=$PROJECT_DIR
 ExecStart=$VENV_PYTHON $APP_SCRIPT
 Restart=on-failure
