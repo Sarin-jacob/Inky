@@ -252,12 +252,20 @@ def draw_display():
         draw_black.text((200, 280), "Please wait 60 seconds", font=font_med, fill=0)
     else:
         # Sensor Reading
-        try:
-            temp = dht_sensor.temperature
-            hum = dht_sensor.humidity
-            sensor_str = f"Temp: {temp}C  |  Hum: {hum}%" if temp else "Sensor Data Unavailable"
-        except Exception:
-            sensor_str = "Sensor Error"
+        sensor_str = "Sensor Error (Timeout)"
+        for _ in range(5):
+            try:
+                temp = dht_sensor.temperature
+                hum = dht_sensor.humidity
+                if temp is not None and hum is not None:
+                    sensor_str = f"Temp: {temp}C  |  Hum: {hum}%"
+                    break # Success! Exit the retry loop
+            except RuntimeError:
+                # DHT sensors require a solid 2 seconds between reads
+                time.sleep(2.0) 
+            except Exception as e:
+                sensor_str = f"Sensor Error: {e}"
+                break
 
         page = state['active_page']
         
