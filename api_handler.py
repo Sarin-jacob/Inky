@@ -12,6 +12,14 @@ except ImportError:
     import pytz
     ZoneInfo = pytz.timezone
 
+import urllib.request
+from datetime import date
+try:
+    import icalendar
+    import recurring_ical_events
+except ImportError:
+    icalendar = None
+
 CACHE_DIR = 'cache'
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -194,3 +202,73 @@ def get_picture_of_the_day(source="nasa", api_key="", upload_dir="uploads"):
     except Exception as e:
         print(f"[-] POTD API Error ({source}): {e}")
         return {"error": f"API Request Failed: {str(e)}"}
+    
+# --- CALENDAR (iCal) HANDLER ---
+def get_calendar_events(ical_url, limit=6):
+    """
+    Fetches an .ics calendar URL, parses recurring events, 
+    and returns a sorted list of today's upcoming meetings.
+    Caches for 30 minutes.
+    """
+    if not ical_url or not icalendar:
+        return [{"title": "No Calendar URL or missing 'icalendar' lib", "time": ""}]
+
+    cache_file = 'calendar_events.json'
+    cached = get_cached_data(cache_file, max_age_seconds=1800)
+    if cached:
+        return cached
+
+    raw_ical_path = os.path.join(CACHE_DIR, 'calendar.ics')
+
+    try:
+        # Download the .ics file 
+        # (Using urllib with a custom header because some Google/Apple calendars block basic python requests)
+        req = urllib.request.Request(ical_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response, open(raw_ical_path, 'wb') as out_file:
+            out_file.write(response.read())
+
+        # Parse the calendar
+        with open(raw_ical_path, 'r') as f:
+            cal = icalendar.Calendar.from_ical(f.read())
+
+        # Extract events happening TODAY (handles recurring RRULEs perfectly)
+        today = date.today()
+        events_today = recurring_ical_events.of(cal).at(today)
+        
+        parsed_events = []
+        for event in events_today:
+            # Extract start time
+            start_dt = event["DTSTART"].dt
+            
+            # Handle full-day events (they are parsed as 'date' objects instead of 'datetime')
+            if isinstance(start_dt, date) and not isinstance(start_dt, datetime):
+                time_str = "All Day"
+            else:
+                # Convert to local time (IST) and format
+                local_dt = start_dt.astimezone(ZoneInfo("Asia/Kolkata"))
+                time_str = local_dt.strftime("%I:%M %p")
+
+            # Clean up the event summary/title
+            title = str(event.get("SUMMARY", "Busy"))
+            
+            parsed_events.append({
+                "title": title,
+                "time": time_str,
+                "timestamp": start_dt.timestamp() if isinstance(start_dt, datetime) else 0
+            })
+
+        # Sort chronologically by time
+        parsed_events.sort(key=lambda x: x.get("timestamp", 0))
+        
+        # Remove the timestamp field before returning/caching and limit the results
+        final_list = [{"title": e["title"], "time": e["time"]} for e in parsed_events[:limit]]
+        
+        if not final_list:
+             final_list = [{"title": "No events scheduled for today!", "time": ""}]
+             
+        save_to_cache(cache_file, final_list)
+        return final_list
+
+    except Exception as e:
+        print(f"[-] Calendar API Error: {e}")
+        return [{"title": "Failed to sync calendar", "time": ""}]
