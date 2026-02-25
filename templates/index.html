@@ -254,9 +254,12 @@
                     } else {
                         data.slides.forEach(slide => {
                             list.innerHTML += `
-                                <div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200 shadow-sm">
-                                    <span class="text-xs font-mono text-slate-600 truncate mr-2">Slide ID: ${slide}</span>
-                                    <button onclick="deleteSlide('${slide}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded text-xs font-bold transition">Delete</button>
+                                <div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200 shadow-sm mb-2">
+                                    <div class="flex items-center gap-3">
+                                        <img src="/api/slides/thumb/${slide}" class="w-16 h-10 object-cover rounded shadow-sm border border-slate-200 bg-slate-100" alt="Slide Thumbnail" onerror="this.style.display='none'">
+                                        <span class="text-xs font-mono text-slate-600 truncate">ID: ${slide}</span>
+                                    </div>
+                                    <button onclick="deleteSlide('${slide}')" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded text-xs font-bold transition">Delete</button>
                                 </div>
                             `;
                         });

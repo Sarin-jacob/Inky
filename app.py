@@ -1,7 +1,8 @@
 import os
 import time
 import glob
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from PIL import Image
+from flask import Flask, render_template, request, redirect, url_for, jsonify,send_from_directory
 from werkzeug.utils import secure_filename
 from utils import save_state, setup_new_wifi, ensure_fallback_ap, process_upload, calculate_bw_diff
 
@@ -91,6 +92,11 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
             save_state(state_ref)
             
         return redirect(url_for('index'))
+    
+    @app.route('/api/slides/thumb/<slide_id>')
+    def serve_thumb(slide_id):
+        """Serves the tiny color thumbnail for the Web UI."""
+        return send_from_directory(SLIDESHOW_DIR, f'{slide_id}_thumb.jpg')
 
     @app.route('/api/slides', methods=['GET'])
     def list_slides():
@@ -105,29 +111,35 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
 
     @app.route('/api/slides/upload', methods=['POST'])
     def upload_slide():
-        """Uploads a new slide, pre-processes it to e-ink format, and saves the pair."""
+        """Uploads a new slide, generates a thumbnail, pre-processes it, and saves the pair."""
         if 'image' not in request.files:
             return redirect(url_for('index'))
             
         file = request.files['image']
         if file.filename != '':
-            slide_id = str(int(time.time())) # Unique ID based on timestamp
+            slide_id = str(int(time.time())) # Unique ID 
             
-            # 1. Save original temporarily
             temp_path = os.path.join(SLIDESHOW_DIR, f'temp_{slide_id}.jpg')
             file.save(temp_path)
             
-            # 2. Process it into the 3-color palette (outputs black_layer.bmp & red_layer.bmp)
+            # --- NEW: Generate a tiny color thumbnail BEFORE palette processing ---
+            try:
+                img = Image.open(temp_path).convert("RGB")
+                img.thumbnail((160, 96)) # Scaled perfectly to match the 800x480 screen aspect ratio
+                img.save(os.path.join(SLIDESHOW_DIR, f'{slide_id}_thumb.jpg'))
+            except Exception as e:
+                print(f"[-] Error generating thumbnail: {e}")
+            # -------------------------------------------------------------------
+            
+            # Process into e-ink palette
             process_upload(temp_path, SLIDESHOW_DIR)
             
-            # 3. Rename the processed BMPs to our slide ID standard
+            # Rename processed BMPs
             os.rename(os.path.join(SLIDESHOW_DIR, 'black_layer.bmp'), os.path.join(SLIDESHOW_DIR, f'{slide_id}_black.bmp'))
             os.rename(os.path.join(SLIDESHOW_DIR, 'red_layer.bmp'), os.path.join(SLIDESHOW_DIR, f'{slide_id}_red.bmp'))
             
-            # 4. Clean up the temporary original image
             os.remove(temp_path)
             
-            # Reset index and force refresh if we are currently looking at the slideshow
             if state_ref.get('active_page') == 3 and state_ref.get('active_mode') == 2:
                 state_ref['slideshow_index'] = 0
                 trigger_full_refresh()
@@ -141,9 +153,11 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         """Deletes a pre-processed slide pair."""
         path_b = os.path.join(SLIDESHOW_DIR, f'{slide_id}_black.bmp')
         path_r = os.path.join(SLIDESHOW_DIR, f'{slide_id}_red.bmp')
+        path_t = os.path.join(SLIDESHOW_DIR, f'{slide_id}_thumb.jpg')
         
         if os.path.exists(path_b): os.remove(path_b)
         if os.path.exists(path_r): os.remove(path_r)
+        if os.path.exists(path_t): os.remove(path_t)
         
         # Reset index to prevent out-of-bounds errors on the hardware loop
         state_ref['slideshow_index'] = 0 
