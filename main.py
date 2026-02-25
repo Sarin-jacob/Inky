@@ -6,6 +6,7 @@ import RPi.GPIO as GPIO
 import board
 import adafruit_dht
 from PIL import Image, ImageDraw
+import textwrap
 
 # Import our new modular tools
 from utils import load_state, save_state, register_mdns
@@ -210,15 +211,64 @@ def render_current_state(time_str, sensor_str):
                 draw_black.text((220, y_offset), title, font=font_med, fill=0)
                 y_offset += 55
                 
-        elif mode == 3: # Scratchpad Notes
-            draw_red.text((40, 40), "NOTES", font=font_large, fill=0)
-            note_text = state.get('scratchpad_text', 'No notes saved.\nAdd something via the Web UI!')
+        elif mode == 3: # Scratchpad Notes (Markdown Supported)
+            # Remove the hardcoded "NOTES" title so the user has full control of the canvas
+            note_text = state.get('scratchpad_text', '# Welcome\nAdd **Markdown** notes via the Web UI!\n\n* Supports lists\n* And headers!')
             
-            lines = [word[:60] for word in note_text.split('\n')]
-            y_offset = 120
-            for line in lines[:8]: 
-                draw_black.text((40, y_offset), line, font=font_med, fill=0)
-                y_offset += 45
+            y_offset = 40 # Start higher up since we removed the hardcoded header
+            lines = note_text.split('\n')
+            
+            for line in lines:
+                line = line.strip()
+                
+                # Stop drawing if we are about to fall off the bottom of the screen (480px)
+                if y_offset > 440:
+                    break 
+                    
+                # Handle empty lines (spacing)
+                if not line:
+                    y_offset += 25
+                    continue
+                    
+                # --- H1 HEADER (#) ---
+                if line.startswith('# '):
+                    text = line[2:]
+                    # Draw H1 in bold RED
+                    draw_red.text((40, y_offset), text, font=font_large, fill=0)
+                    y_offset += 70
+                    
+                # --- H2 HEADER (##) ---
+                elif line.startswith('## '):
+                    text = line[3:]
+                    # Draw H2 in bold BLACK
+                    draw_black.text((40, y_offset), text, font=font_large, fill=0)
+                    y_offset += 65
+                    
+                # --- BULLET POINTS (- or *) ---
+                elif line.startswith('- ') or line.startswith('* '):
+                    text = line[2:]
+                    # Draw a red bullet point
+                    draw_red.text((40, y_offset), "•", font=font_med, fill=0)
+                    
+                    # Wrap the text so long bullet points don't go off the right edge
+                    wrapped = textwrap.wrap(text, width=45)
+                    for w in wrapped:
+                        draw_black.text((75, y_offset), w, font=font_med, fill=0)
+                        y_offset += 45
+                        if y_offset > 440: break
+                        
+                # --- STANDARD TEXT ---
+                else:
+                    # Clean up basic bolding syntax (**text**) by just rendering it normally for now
+                    # (To actually change font weight mid-sentence in PIL requires complex bounding box math)
+                    clean_line = line.replace('**', '').replace('__', '')
+                    
+                    # Smart word-wrapping 
+                    wrapped = textwrap.wrap(clean_line, width=50)
+                    for w in wrapped:
+                        draw_black.text((40, y_offset), w, font=font_med, fill=0)
+                        y_offset += 45
+                        if y_offset > 440: break
 
     # ==========================================
     # PAGE 3: THE ART GALLERY
