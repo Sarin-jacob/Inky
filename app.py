@@ -117,13 +117,18 @@ def setup_gpio():
 def button_callback(channel):
     global needs_refresh
     
-    # Software Debounce: Wait 50ms and check if the button is STILL pressed.
-    # This filters out electrical noise jumping between pins 6 and 13.
-    time.sleep(0.05)
+    # Force a print IMMEDIATELY when the hardware interrupt fires
+    print(f"[HW] Interrupt fired on pin {channel}", flush=True)
+
+    # Lowered debounce from 50ms to 10ms. 
+    # This is fast enough to catch a quick tap, but slow enough to filter electrical noise.
+    time.sleep(0.01)
+    
     if GPIO.input(channel) != GPIO.LOW:
-        return # It was a ghost trigger, ignore it
+        print(f"[IGNORED] Pin {channel} was a ghost trigger/bounce.", flush=True)
+        return 
         
-    print(f"Valid button press detected on GPIO {channel}")
+    print(f"[VALID] Button press registered on GPIO {channel}", flush=True)
 
     if channel == BTN_PAGE_3:
         start_time = time.time()
@@ -131,7 +136,7 @@ def button_callback(channel):
         while GPIO.input(channel) == GPIO.LOW:
             time.sleep(0.1)
             if time.time() - start_time > 3.0:
-                print("Long press detected: Triggering Reboot...")
+                print("Long press detected: Triggering Reboot...", flush=True)
                 threading.Thread(target=delayed_reboot).start()
                 return
 
