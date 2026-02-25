@@ -219,7 +219,7 @@ def render_current_state(time_str, sensor_str):
     # PAGE 3: THE ART GALLERY
     # ==========================================
     elif page == 3:
-        if mode in [1, 2]: # Single Photo or Local Slideshow
+        if mode ==1: # Single Photo or Local Slideshow
             path_b = os.path.join(UPLOAD_DIR, 'black_layer.bmp')
             path_r = os.path.join(UPLOAD_DIR, 'red_layer.bmp')
             if state.get('has_photo') and os.path.exists(path_b) and os.path.exists(path_r):
@@ -228,6 +228,33 @@ def render_current_state(time_str, sensor_str):
             else:
                 draw_red.text((150, 200), "NO PHOTO UPLOADED", font=font_large, fill=0)
                 draw_black.text((150, 280), "Use Web UI to upload media", font=font_med, fill=0)
+        
+        elif mode == 2: # Local Slideshow (Pre-baked E-ink format)
+            slideshow_dir = os.path.join(UPLOAD_DIR, 'slideshow')
+            
+            # Find all pre-processed black layers
+            import glob
+            search_pattern = os.path.join(slideshow_dir, '*_black.bmp')
+            slide_files = sorted(glob.glob(search_pattern))
+            
+            if slide_files:
+                # Ensure our index is safely within bounds
+                idx = state.get('slideshow_index', 0)
+                if idx >= len(slide_files):
+                    idx = 0
+                    state['slideshow_index'] = 0
+                    
+                path_b = slide_files[idx]
+                path_r = path_b.replace('_black.bmp', '_red.bmp') # Match the pair
+                
+                print(f"[*] Rendering Slide {idx + 1}/{len(slide_files)}: {os.path.basename(path_b)}")
+                
+                if os.path.exists(path_b) and os.path.exists(path_r):
+                    img_black.paste(Image.open(path_b), (0,0))
+                    img_red.paste(Image.open(path_r), (0,0))
+            else:
+                draw_red.text((150, 200), "SLIDESHOW FOLDER EMPTY", font=font_large, fill=0)
+                draw_black.text((150, 280), "Upload images via Web UI", font=font_med, fill=0)
                 
         elif mode == 3: # Picture of the Day
             potd_source = state.get('potd_source', 'nasa') 
@@ -263,6 +290,17 @@ def hardware_loop():
         now_str = datetime.now().strftime("%I:%M %p")
         sensor_str = get_sensor_string(dht_sensor)
         time_since_full = time.time() - last_full_refresh_time
+        time_since_slide = time.time() - last_slide_change_time
+
+        is_slideshow_active = (state.get('active_page') == 3 and state.get('active_mode') == 2)
+        slide_interval = state.get('slideshow_interval', 3600) # Default 1 hour
+        
+        if is_slideshow_active and time_since_slide >= slide_interval:
+            print("[*] Auto-advancing slideshow...")
+            state['slideshow_index'] = state.get('slideshow_index', 0) + 1
+            save_state(state)
+            flag_full_refresh = True
+            last_slide_change_time = time.time()
         
         # 1. API Push Partial Update (Page 1, Mode 3 B&W Diff)
         if flag_partial_refresh and partial_bbox:

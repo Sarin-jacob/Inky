@@ -1,10 +1,16 @@
 import os
+import time
+import glob
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 from utils import save_state, setup_new_wifi, ensure_fallback_ap, process_upload, calculate_bw_diff
 
+
 UPLOAD_DIR = 'uploads'
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+SLIDESHOW_DIR = os.path.join(UPLOAD_DIR, 'slideshow')
+os.makedirs(SLIDESHOW_DIR, exist_ok=True)
 
 def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
     """
@@ -85,6 +91,73 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
             trigger_full_refresh()
             save_state(state_ref)
             
+        return redirect(url_for('index'))
+
+    @app.route('/api/slides', methods=['GET'])
+    def list_slides():
+        """Returns a list of all pre-processed slides."""
+        # Find all black layers, which represent a valid slide pair
+        search_pattern = os.path.join(SLIDESHOW_DIR, '*_black.bmp')
+        slides = [os.path.basename(f).replace('_black.bmp', '') for f in glob.glob(search_pattern)]
+        return jsonify({
+            "slides": sorted(slides),
+            "interval_seconds": state_ref.get('slideshow_interval', 3600)
+        })
+
+    @app.route('/api/slides/upload', methods=['POST'])
+    def upload_slide():
+        """Uploads a new slide, pre-processes it to e-ink format, and saves the pair."""
+        if 'image' not in request.files:
+            return redirect(url_for('index'))
+            
+        file = request.files['image']
+        if file.filename != '':
+            slide_id = str(int(time.time())) # Unique ID based on timestamp
+            
+            # 1. Save original temporarily
+            temp_path = os.path.join(SLIDESHOW_DIR, f'temp_{slide_id}.jpg')
+            file.save(temp_path)
+            
+            # 2. Process it into the 3-color palette (outputs black_layer.bmp & red_layer.bmp)
+            process_upload(temp_path, SLIDESHOW_DIR)
+            
+            # 3. Rename the processed BMPs to our slide ID standard
+            os.rename(os.path.join(SLIDESHOW_DIR, 'black_layer.bmp'), os.path.join(SLIDESHOW_DIR, f'{slide_id}_black.bmp'))
+            os.rename(os.path.join(SLIDESHOW_DIR, 'red_layer.bmp'), os.path.join(SLIDESHOW_DIR, f'{slide_id}_red.bmp'))
+            
+            # 4. Clean up the temporary original image
+            os.remove(temp_path)
+            
+            # Reset index and force refresh if we are currently looking at the slideshow
+            if state_ref.get('active_page') == 3 and state_ref.get('active_mode') == 2:
+                state_ref['slideshow_index'] = 0
+                trigger_full_refresh()
+                
+            save_state(state_ref)
+            
+        return redirect(url_for('index'))
+
+    @app.route('/api/slides/delete/<slide_id>', methods=['POST'])
+    def delete_slide(slide_id):
+        """Deletes a pre-processed slide pair."""
+        path_b = os.path.join(SLIDESHOW_DIR, f'{slide_id}_black.bmp')
+        path_r = os.path.join(SLIDESHOW_DIR, f'{slide_id}_red.bmp')
+        
+        if os.path.exists(path_b): os.remove(path_b)
+        if os.path.exists(path_r): os.remove(path_r)
+        
+        # Reset index to prevent out-of-bounds errors on the hardware loop
+        state_ref['slideshow_index'] = 0 
+        save_state(state_ref)
+        
+        return jsonify({"status": "success", "deleted": slide_id})
+    
+    @app.route('/api/slides/interval', methods=['POST'])
+    def set_slide_interval():
+        """Updates the time between slides (in seconds)."""
+        interval = int(request.form.get('interval', 3600))
+        state_ref['slideshow_interval'] = interval
+        save_state(state_ref)
         return redirect(url_for('index'))
 
     @app.route('/api/push_image', methods=['POST'])
