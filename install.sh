@@ -9,7 +9,7 @@ fi
 # 2. Get the absolute path of the current directory
 PROJECT_DIR=$(pwd)
 VENV_PYTHON="$PROJECT_DIR/.venv/bin/python"
-APP_SCRIPT="$PROJECT_DIR/app.py"
+APP_SCRIPT="$PROJECT_DIR/main.py"
 
 echo "[*] Setting up Inky systemd service..."
 
