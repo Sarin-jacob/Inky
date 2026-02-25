@@ -283,7 +283,8 @@ def hardware_loop():
     global flag_full_refresh, flag_partial_refresh, partial_bbox
     
     last_drawn_time = ""
-    last_full_refresh_time,last_slide_change_time = time.time()
+    last_full_refresh_time = time.time()
+    last_slide_change_time= time.time()
     font_large, font_med, _ = load_fonts()
     
     while True:
