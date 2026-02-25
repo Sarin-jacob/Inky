@@ -200,7 +200,7 @@ def render_current_state(time_str, sensor_str):
                 
         elif mode == 2: # Calendar Agenda
             draw_red.text((40, 40), "TODAY'S AGENDA", font=font_large, fill=0)
-            ical_url = state.get('calendar_ical_url', '')
+            ical_url = state.get('calendar_ical_url', 'https://ics.calendarlabs.com/33/0ff71705/India_Holidays.ics')
             events = get_calendar_events(ical_url)
             
             y_offset = 120
