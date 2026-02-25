@@ -49,12 +49,12 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
                         state_ref['wifi_msg'] = "Error applying Wi-Fi settings."
             elif action == 'set_config':
                 # Save all the new fields into the state dictionary
-                state_ref['todoist_api_key'] = request.form.get('todoist_api_key', '')
-                state_ref['openweather_api_key'] = request.form.get('openweather_api_key', '')
-                state_ref['potd_source'] = request.form.get('potd_source', 'nasa')
-                state_ref['unsplash_api_key'] = request.form.get('unsplash_api_key', '')
-                state_ref['calendar_ical_url'] = request.form.get('calendar_ical_url', '')
-                state_ref['scratchpad_text'] = request.form.get('scratchpad_text', '')
+                state_ref['todoist_api_key'] = request.form.get('todoist_api_key', '').strip()
+                state_ref['openweather_api_key'] = request.form.get('openweather_api_key', '').strip()
+                state_ref['potd_source'] = request.form.get('potd_source', 'nasa').strip()
+                state_ref['unsplash_api_key'] = request.form.get('unsplash_api_key', '').strip()
+                state_ref['calendar_ical_url'] = request.form.get('calendar_ical_url', '').strip()
+                state_ref['scratchpad_text'] = request.form.get('scratchpad_text', '').strip()
                 
                 trigger_full_refresh()
 
