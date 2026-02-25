@@ -4,11 +4,13 @@ import json
 import threading
 from datetime import datetime
 import subprocess
+import socket
 import board
 import adafruit_dht
 import RPi.GPIO as GPIO
 from flask import Flask, render_template, request, redirect, url_for
 from PIL import Image, ImageDraw, ImageFont
+from zeroconf import IPVersion, ServiceInfo, Zeroconf
 
 # Import the V2 Driver
 from driver.epd7in5b_V2 import EPD
@@ -54,6 +56,32 @@ def delayed_reboot():
     time.sleep(3)
     os.system('sudo reboot')
 
+def register_mdns():
+    """Registers Inky.local on the network"""
+    desc = {'path': '/'}
+    
+    # Automatically get the Pi's local IP
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        local_ip = "127.0.0.1"
+
+    info = ServiceInfo(
+        "_http._tcp.local.",
+        "Inky._http._tcp.local.",
+        addresses=[socket.inet_aton(local_ip)],
+        port=5000,
+        properties=desc,
+        server="Inky.local.",
+    )
+
+    zc = Zeroconf(ip_version=IPVersion.V4Only)
+    print(f"[*] Registering mDNS: Inky.local at {local_ip}")
+    zc.register_service(info)
+    return zc, info
 
 # --- HARDWARE SETUP ---
 DHT_PIN = board.D5
@@ -261,7 +289,9 @@ def hardware_loop():
 if __name__ == '__main__':
     load_state()
     setup_gpio()
-    
+      
+    zc, info = register_mdns()
+
     web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False))
     web_thread.daemon = True
     web_thread.start()

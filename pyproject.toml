@@ -18,7 +18,8 @@ dependencies = [
     "rpi-lgpio",
     "spidev>=3.8",
     "todoist-python>=8.1.4",
-    "gpiozero"
+    "gpiozero",
+    "zeroconf"
 ]
 
 [tool.uv.extra-build-dependencies]
