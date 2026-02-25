@@ -77,7 +77,7 @@ def register_mdns():
         "_http._tcp.local.",
         "Inky._http._tcp.local.",
         addresses=[socket.inet_aton(local_ip)],
-        port=80,
+        port=5000,
         properties=desc,
         server="Inky.local.",
     )
@@ -335,7 +335,7 @@ if __name__ == '__main__':
       
     zc, info = register_mdns()
 
-    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=80, debug=True, use_reloader=False))
+    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False))
     web_thread.daemon = True
     web_thread.start()
     
