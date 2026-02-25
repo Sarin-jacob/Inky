@@ -31,6 +31,7 @@ Modern Raspberry Pi OS (Bookworm and later) requires specific C-libraries and he
 ```bash
 sudo apt update
 sudo apt install -y libgpiod2 swig liblgpio-dev python3-dev avahi-daemon
+sudo usermod -a -G gpio $USER
 ```
 
 ### 3. Install `uv`
