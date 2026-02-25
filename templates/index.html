@@ -9,11 +9,19 @@
         h2 { margin-top: 0; color: #333; }
         button, input[type="submit"] { background: #d93838; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 5px 0;}
         button:hover, input[type="submit"]:hover { background: #b02a2a; }
-        select, input[type="file"] { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; }
+        select, input[type="text"], input[type="password"], input[type="file"] { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         .current-state { font-weight: bold; color: #d93838; }
+        .alert { padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb; }
+        .alert.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
     </style>
 </head>
 <body>
+
+    {% if state.wifi_msg %}
+    <div class="alert {% if 'Error' in state.wifi_msg %}error{% endif %}">
+        {{ state.wifi_msg }}
+    </div>
+    {% endif %}
 
     <div class="card">
         <h2>Active Display</h2>
@@ -45,6 +53,17 @@
             <input type="hidden" name="action" value="upload">
             <input type="file" name="image" accept="image/jpeg, image/png, image/bmp" required>
             <input type="submit" value="Upload & Display">
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Network Configuration</h2>
+        <p style="font-size: 0.9em; color: #666;">Change the Wi-Fi network InfoWindow connects to. If the connection fails, an access point named <strong>Inky_Hotspot</strong> will be created automatically.</p>
+        <form method="POST">
+            <input type="hidden" name="action" value="set_wifi">
+            <input type="text" name="ssid" placeholder="Network SSID (Name)" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="submit" value="Update Wi-Fi & Reboot">
         </form>
     </div>
 

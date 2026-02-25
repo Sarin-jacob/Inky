@@ -3,6 +3,7 @@ import time
 import json
 import threading
 from datetime import datetime
+import subprocess
 import board
 import adafruit_dht
 import RPi.GPIO as GPIO
@@ -29,6 +30,30 @@ state = {
 
 needs_refresh = True 
 app = Flask(__name__)
+
+# --- WI-FI MANAGEMENT FUNCTIONS ---
+def run_cmd(cmd):
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return result.returncode
+
+def setup_new_wifi(ssid, password):
+    run_cmd(f'sudo nmcli connection delete "{ssid}"')
+    c1 = run_cmd(f'sudo nmcli connection add type wifi ifname wlan0 con-name "{ssid}" ssid "{ssid}"')
+    c2 = run_cmd(f'sudo nmcli connection modify "{ssid}" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "{password}"')
+    c3 = run_cmd(f'sudo nmcli connection modify "{ssid}" connection.autoconnect-retries 3')
+    return c1 == 0 and c2 == 0 and c3 == 0
+
+def ensure_fallback_ap():
+    if run_cmd('nmcli connection show "Fallback_AP"') != 0:
+        run_cmd('sudo nmcli connection add type wifi ifname wlan0 mode ap con-name "Fallback_AP" ssid "Inky_Hotspot"')
+        run_cmd('sudo nmcli connection modify "Fallback_AP" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "SecurePass123" ipv4.method shared')
+    run_cmd('sudo nmcli connection modify "Fallback_AP" connection.autoconnect yes connection.autoconnect-priority -10')
+
+def delayed_reboot():
+    """Waits 3 seconds so the HTTP response finishes, then reboots"""
+    time.sleep(3)
+    os.system('sudo reboot')
+
 
 # --- HARDWARE SETUP ---
 DHT_PIN = board.D5
@@ -122,6 +147,7 @@ def index():
     global needs_refresh
     if request.method == 'POST':
         action = request.form.get('action')
+        state['wifi_msg'] = "" # Clear previous messages
         
         if action == 'set_page':
             state['active_page'] = int(request.form.get('page'))
@@ -135,6 +161,17 @@ def index():
                 process_upload(temp_path)
                 state['has_photo'] = True
                 state['active_page'] = 3
+        elif action == 'set_wifi':
+            ssid = request.form.get('ssid')
+            password = request.form.get('password')
+            if ssid and password:
+                success = setup_new_wifi(ssid, password)
+                ensure_fallback_ap()
+                if success:
+                    state['wifi_msg'] = f"Success! Added '{ssid}'. Rebooting device now..."
+                    threading.Thread(target=delayed_reboot).start()
+                else:
+                    state['wifi_msg'] = "Error applying Wi-Fi settings."
                 
         save_state()
         needs_refresh = True
