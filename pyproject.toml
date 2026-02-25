@@ -1,7 +1,7 @@
 [project]
 name = "inky"
 version = "0.1.0"
-description = "Add your description here"
+description = "INKY is our small little desk display"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
