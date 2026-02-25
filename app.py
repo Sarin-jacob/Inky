@@ -27,7 +27,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 state = {
     "active_page": 1,
     "calendar_source": "todoist",
-    "has_photo": False
+    "has_photo": False,
+    "wifi_msg": "",
+    "is_rebooting": False
 }
 
 needs_refresh = True 
@@ -51,9 +53,11 @@ def ensure_fallback_ap():
         run_cmd('sudo nmcli connection modify "Fallback_AP" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "SecurePass123" ipv4.method shared')
     run_cmd('sudo nmcli connection modify "Fallback_AP" connection.autoconnect yes connection.autoconnect-priority -10')
 
-def delayed_reboot():
-    """Waits 3 seconds so the HTTP response finishes, then reboots"""
-    time.sleep(3)
+def delayed_reboot(msg="Rebooting..."):
+    global needs_refresh
+    state['is_rebooting'] = True
+    needs_refresh = True # Trigger one last draw to show rebooting status
+    time.sleep(5)
     os.system('sudo reboot')
 
 def register_mdns():
@@ -73,7 +77,7 @@ def register_mdns():
         "_http._tcp.local.",
         "Inky._http._tcp.local.",
         addresses=[socket.inet_aton(local_ip)],
-        port=5000,
+        port=80,
         properties=desc,
         server="Inky.local.",
     )
@@ -106,7 +110,7 @@ def setup_gpio():
         GPIO.setup(btn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # Increased bouncetime to 1000ms to help with the ghost triggering
         try:
-            GPIO.add_event_detect(btn, GPIO.FALLING, callback=button_callback, bouncetime=1000)
+            GPIO.add_event_detect(btn, GPIO.FALLING, callback=button_callback, bouncetime=200)
         except RuntimeError:
             pass
 
@@ -146,7 +150,10 @@ def load_state():
     global state
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, 'r') as f:
-            state.update(json.load(f))
+            saved = json.load(f)
+            saved['wifi_msg'] = ""
+            saved['is_rebooting'] = False
+            state.update(saved)
 
 def save_state():
     with open(STATE_FILE, 'w') as f:
@@ -212,6 +219,8 @@ def index():
                     threading.Thread(target=delayed_reboot).start()
                 else:
                     state['wifi_msg'] = "Error applying Wi-Fi settings."
+        elif action == 'reboot':
+            threading.Thread(target=delayed_reboot).start()
                 
         save_state()
         needs_refresh = True
@@ -238,43 +247,47 @@ def draw_display():
         font_large = ImageFont.load_default()
         font_med = ImageFont.load_default()
     
-    # Sensor Reading
-    try:
-        temp = dht_sensor.temperature
-        hum = dht_sensor.humidity
-        sensor_str = f"Temp: {temp}C  |  Hum: {hum}%" if temp else "Sensor Data Unavailable"
-    except Exception:
-        sensor_str = "Sensor Error"
+    if state.get('is_rebooting'):
+        draw_red.text((200, 200), "REBOOTING...", font=font_large, fill=0)
+        draw_black.text((200, 280), "Please wait 60 seconds", font=font_med, fill=0)
+    else:
+        # Sensor Reading
+        try:
+            temp = dht_sensor.temperature
+            hum = dht_sensor.humidity
+            sensor_str = f"Temp: {temp}C  |  Hum: {hum}%" if temp else "Sensor Data Unavailable"
+        except Exception:
+            sensor_str = "Sensor Error"
 
-    page = state['active_page']
-    
-    if page == 1:
-        # PAGE 1: Clock & Calendar
-        now = datetime.now()
-        draw_black.text((40, 60), now.strftime("%I:%M %p"), font=font_large, fill=0) 
-        draw_red.text((40, 160), now.strftime("%A, %B %d"), font=font_med, fill=0) 
-        draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
+        page = state['active_page']
         
-    elif page == 2:
-        # PAGE 2: Todoist / Google Cal 
-        source = state['calendar_source'].upper()
-        draw_red.text((40, 40), f"{source} TASKS", font=font_large, fill=0) 
-        draw_black.text((40, 140), "1. Example Task 1", font=font_med, fill=0)
-        draw_black.text((40, 200), "2. Example Task 2", font=font_med, fill=0)
-        draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
-        
-    elif page == 3:
-        # PAGE 3: Photo Viewer
-        path_b = os.path.join(UPLOAD_DIR, 'black_layer.bmp')
-        path_r = os.path.join(UPLOAD_DIR, 'red_layer.bmp')
-        
-        if state['has_photo'] and os.path.exists(path_b) and os.path.exists(path_r):
-            bmp_black = Image.open(path_b)
-            bmp_red = Image.open(path_r)
-            image_black.paste(bmp_black, (0,0))
-            image_red.paste(bmp_red, (0,0))
-        else:
-            draw_red.text((150, 200), "NO PHOTO UPLOADED", font=font_large, fill=0)
+        if page == 1:
+            # PAGE 1: Clock & Calendar
+            now = datetime.now()
+            draw_black.text((40, 60), now.strftime("%I:%M %p"), font=font_large, fill=0) 
+            draw_red.text((40, 160), now.strftime("%A, %B %d"), font=font_med, fill=0) 
+            draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
+            
+        elif page == 2:
+            # PAGE 2: Todoist / Google Cal 
+            source = state['calendar_source'].upper()
+            draw_red.text((40, 40), f"{source} TASKS", font=font_large, fill=0) 
+            draw_black.text((40, 140), "1. Example Task 1", font=font_med, fill=0)
+            draw_black.text((40, 200), "2. Example Task 2", font=font_med, fill=0)
+            draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
+            
+        elif page == 3:
+            # PAGE 3: Photo Viewer
+            path_b = os.path.join(UPLOAD_DIR, 'black_layer.bmp')
+            path_r = os.path.join(UPLOAD_DIR, 'red_layer.bmp')
+            
+            if state['has_photo'] and os.path.exists(path_b) and os.path.exists(path_r):
+                bmp_black = Image.open(path_b)
+                bmp_red = Image.open(path_r)
+                image_black.paste(bmp_black, (0,0))
+                image_red.paste(bmp_red, (0,0))
+            else:
+                draw_red.text((150, 200), "NO PHOTO UPLOADED", font=font_large, fill=0)
             
     # Send both layers to V2 driver
     epd.display(epd.getbuffer(image_black), epd.getbuffer(image_red))
@@ -309,8 +322,8 @@ if __name__ == '__main__':
     web_thread.start()
     
     try:
-        print("Starting Hardware Loop...")
         hardware_loop()
     except KeyboardInterrupt:
-        print("Shutting down...")
+        zc.unregister_service(info)
+        zc.close()
         GPIO.cleanup()
