@@ -30,7 +30,7 @@ The e-ink display requires the hardware SPI interface to be enabled on your Rasp
 Modern Raspberry Pi OS (Bookworm and later) requires specific C-libraries and headers to compile the GPIO and sensor bindings. Run the following command:
 ```bash
 sudo apt update
-sudo apt install -y libgpiod2 swig liblgpio-dev python3-dev
+sudo apt install -y libgpiod2 swig liblgpio-dev python3-dev avahi-daemon
 ```
 
 ### 3. Install `uv`

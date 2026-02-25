@@ -120,10 +120,22 @@ def button_callback(channel):
         return # It was a ghost trigger, ignore it
         
     print(f"Valid button press detected on GPIO {channel}")
-    
+
+    if channel == BTN_PAGE_3:
+        start_time = time.time()
+        # Wait while button is held
+        while GPIO.input(channel) == GPIO.LOW:
+            time.sleep(0.1)
+            if time.time() - start_time > 3.0:
+                print("Long press detected: Triggering Reboot...")
+                threading.Thread(target=delayed_reboot).start()
+                return
+
+        # If released before 3s, it's just a normal page switch
+        state['active_page'] = 3
+
     if channel == BTN_PAGE_1: state['active_page'] = 1
     elif channel == BTN_PAGE_2: state['active_page'] = 2
-    elif channel == BTN_PAGE_3: state['active_page'] = 3
     elif channel == BTN_EXTRA: pass 
     
     save_state()
