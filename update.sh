@@ -19,18 +19,19 @@ fi
 echo "[*] Pulling latest changes from GitHub..."
 git pull origin main
 
-# 4. Re-sync dependencies if uv is present
+# 4. Pop the stash if we stashed anything
+if [ "$STASHED" = true ]; then
+    echo "[*] Re-applying local changes (popping stash)..."
+    git stash pop
+fi
+
+# 5. Re-sync dependencies if uv is present
 if [ -d ".venv" ]; then
     echo "[*] Syncing Python dependencies with uv..."
     # We use 'uv sync' to ensure the venv matches the updated pyproject.toml/requirements
     uv sync
 fi
 
-# 5. Pop the stash if we stashed anything
-if [ "$STASHED" = true ]; then
-    echo "[*] Re-applying local changes (popping stash)..."
-    git stash pop
-fi
 
 # 6. Restart the systemd service
 echo "[*] Restarting Inky.service..."
