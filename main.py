@@ -18,7 +18,10 @@ os.environ['TZ'] = 'Asia/Kolkata'
 time.tzset()
 
 UPLOAD_DIR = 'uploads'
+POTD_DIR= f"{UPLOAD_DIR}/potd"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(POTD_DIR, exist_ok=True)
+
 
 # Shared state and thread-safe flags
 state = load_state()
@@ -260,9 +263,9 @@ def render_current_state(time_str, sensor_str):
             potd_source = state.get('potd_source', 'nasa') 
             api_key = state.get('unsplash_api_key', '') if potd_source == 'unsplash' else ''
             
-            potd_meta = get_picture_of_the_day(source=potd_source, api_key=api_key, upload_dir=UPLOAD_DIR)
-            path_b = os.path.join(UPLOAD_DIR, 'black_layer.bmp')
-            path_r = os.path.join(UPLOAD_DIR, 'red_layer.bmp')
+            potd_meta = get_picture_of_the_day(source=potd_source, api_key=api_key, upload_dir=POTD_DIR)
+            path_b = os.path.join(POTD_DIR, 'black_layer.bmp')
+            path_r = os.path.join(POTD_DIR, 'red_layer.bmp')
             
             if "error" not in potd_meta and os.path.exists(path_b) and os.path.exists(path_r):
                 img_black.paste(Image.open(path_b), (0,0))
