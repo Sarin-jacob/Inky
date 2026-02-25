@@ -102,7 +102,7 @@ def get_todoist_tasks(api_key, limit=5):
     try:
         headers = {"Authorization": f"Bearer {api_key}"}
         # Fetch tasks due today or overdue
-        url = "https://api.todoist.com/rest/v2/tasks?filter=(today | overdue)"
+        url = "https://api.todoist.com/api/v1/tasks?filter=(today | overdue)"
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
