@@ -157,7 +157,7 @@ def render_current_state(time_str, sensor_str):
             weather = get_weather(weather_key)
             
             draw_black.text((40, 40), f"Local: {clocks['local']}", font=font_med, fill=0)
-            draw_red.text((40, 100), f"CEST Alarm: {clocks['cest']}", font=font_small, fill=0)
+            draw_red.text((40, 100), f"CEST: {clocks['cest']}", font=font_small, fill=0)
             
             draw_black.text((40, 180), "CURRENT WEATHER", font=font_small, fill=0)
             if "error" in weather:
