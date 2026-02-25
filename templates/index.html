@@ -1,71 +1,155 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>InfoWindow Control</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f4f4f4; }
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; color: #333; }
-        button, input[type="submit"] { background: #d93838; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 5px 0;}
-        button:hover, input[type="submit"]:hover { background: #b02a2a; }
-        select, input[type="text"], input[type="password"], input[type="file"] { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .current-state { font-weight: bold; color: #d93838; }
-        .alert { padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb; }
-        .alert.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inky Dashboard Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased p-4 md:p-8">
 
-    {% if state.wifi_msg %}
-    <div class="alert {% if 'Error' in state.wifi_msg %}error{% endif %}">
-        {{ state.wifi_msg }}
+    <div class="max-w-3xl mx-auto space-y-6">
+        
+        <header class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">Inky Control Panel</h1>
+                    <p class="text-sm text-slate-500">Welcome back, Sarin. Manage your e-ink dashboard.</p>
+                </div>
+                <div class="text-right">
+                    <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Current State</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        Page {{ state.active_page }} • Mode {{ state.active_mode }}
+                    </span>
+                </div>
+            </div>
+
+            {% if state.wifi_msg %}
+            <div class="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
+                {{ state.wifi_msg }}
+            </div>
+            {% endif %}
+            
+            {% if state.is_rebooting %}
+            <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm animate-pulse">
+                System is rebooting. Please wait 60 seconds before refreshing this page.
+            </div>
+            {% endif %}
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <h2 class="text-lg font-semibold mb-4">Display Page</h2>
+                <form method="POST" action="/" class="space-y-3">
+                    <input type="hidden" name="action" value="set_page">
+                    <button type="submit" name="page" value="1" 
+                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 1 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                        <span class="font-medium block">1. The Daily Hub</span>
+                        <span class="text-xs text-slate-500">Time, Environment & API</span>
+                    </button>
+                    <button type="submit" name="page" value="2" 
+                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 2 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                        <span class="font-medium block">2. Productivity</span>
+                        <span class="text-xs text-slate-500">Tasks, Calendar & Notes</span>
+                    </button>
+                    <button type="submit" name="page" value="3" 
+                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 3 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                        <span class="font-medium block">3. Art Gallery</span>
+                        <span class="text-xs text-slate-500">Photos & API Images</span>
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <h2 class="text-lg font-semibold mb-4">Page Mode</h2>
+                <form method="POST" action="/" class="space-y-3">
+                    <input type="hidden" name="action" value="set_mode">
+                    
+                    <button type="submit" name="mode" value="1" 
+                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 1 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                        <span class="font-medium block">Mode 1</span>
+                        <span class="text-xs text-slate-500">
+                            {% if state.active_page == 1 %}Minimalist Clock
+                            {% elif state.active_page == 2 %}Task List
+                            {% else %}Single Photo{% endif %}
+                        </span>
+                    </button>
+                    
+                    <button type="submit" name="mode" value="2" 
+                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                        <span class="font-medium block">Mode 2</span>
+                        <span class="text-xs text-slate-500">
+                            {% if state.active_page == 1 %}World Clock (IST/CEST) & Weather
+                            {% elif state.active_page == 2 %}Calendar Agenda
+                            {% else %}Local Slideshow{% endif %}
+                        </span>
+                    </button>
+                    
+                    <button type="submit" name="mode" value="3" 
+                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 3 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                        <span class="font-medium block">Mode 3</span>
+                        <span class="text-xs text-slate-500">
+                            {% if state.active_page == 1 %}Custom API Push (B&W)
+                            {% elif state.active_page == 2 %}Scratchpad / Notes
+                            {% else %}Picture of the Day{% endif %}
+                        </span>
+                    </button>
+                </form>
+            </section>
+            
+        </div>
+
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <h2 class="text-lg font-semibold mb-2">Upload Media</h2>
+            <p class="text-sm text-slate-500 mb-4">Upload an image for the Art Gallery. It will be automatically converted to the 3-color palette.</p>
+            <form method="POST" action="/media" enctype="multipart/form-data" class="flex items-center gap-4">
+                <input type="file" name="image" accept="image/jpeg, image/png" required
+                       class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
+                <button type="submit" class="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm">
+                    Upload
+                </button>
+            </form>
+        </section>
+
+        <section class="bg-slate-900 rounded-xl shadow-sm p-6 border border-slate-800 text-slate-300">
+            <h2 class="text-lg font-semibold text-white mb-2">API Push Mode (Page 1, Mode 3)</h2>
+            <p class="text-sm mb-4">To push a custom graph or image to the screen via your network, POST a B&W image to the endpoint below. The system will automatically diff the image and perform a blazing-fast partial update.</p>
+            <div class="bg-black/50 p-3 rounded text-xs font-mono text-emerald-400 overflow-x-auto">
+                curl -X POST -F "image=@my_graph.png" http://Inky.local:5000/api/push_image
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 border-t-4 border-t-slate-800">
+            <h2 class="text-lg font-semibold mb-4 text-slate-900">System & Wi-Fi</h2>
+            <form method="POST" action="/" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <input type="hidden" name="action" value="set_wifi">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Network SSID</label>
+                    <input type="text" name="ssid" placeholder="MyWiFi" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" name="password" placeholder="••••••••" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-200 transition">
+                    Connect & Reboot
+                </button>
+            </form>
+
+            <hr class="my-6 border-slate-200">
+            
+            <div class="flex justify-between items-center">
+                <p class="text-sm text-slate-500">Hardware restart. (Also triggered by holding Button 1 + 3 for 5 seconds).</p>
+                <form method="POST" action="/">
+                    <input type="hidden" name="action" value="reboot">
+                    <button type="submit" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg border border-red-200 text-sm font-medium hover:bg-red-100 transition">
+                        Reboot System
+                    </button>
+                </form>
+            </div>
+        </section>
+
     </div>
-    {% endif %}
-
-    <div class="card">
-        <h2>Active Display</h2>
-        <p>Current Page: <span class="current-state">Page {{ state.active_page }}</span></p>
-        <form method="POST">
-            <input type="hidden" name="action" value="set_page">
-            <button type="submit" name="page" value="1">1. Clock & Sensor</button>
-            <button type="submit" name="page" value="2">2. Tasks / Calendar</button>
-            <button type="submit" name="page" value="3">3. Photo Viewer</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <h2>Calendar Source (Page 2)</h2>
-        <p>Current Source: <span class="current-state">{{ state.calendar_source | title }}</span></p>
-        <form method="POST">
-            <input type="hidden" name="action" value="set_source">
-            <select name="source">
-                <option value="todoist" {% if state.calendar_source == 'todoist' %}selected{% endif %}>Todoist</option>
-                <option value="google" {% if state.calendar_source == 'google' %}selected{% endif %}>Google Calendar</option>
-            </select>
-            <input type="submit" value="Save Source">
-        </form>
-    </div>
-
-    <div class="card">
-        <h2>Upload Photo (Page 3)</h2>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="upload">
-            <input type="file" name="image" accept="image/jpeg, image/png, image/bmp" required>
-            <input type="submit" value="Upload & Display">
-        </form>
-    </div>
-
-    <div class="card">
-        <h2>Network Configuration</h2>
-        <p style="font-size: 0.9em; color: #666;">Change the Wi-Fi network InfoWindow connects to. If the connection fails, an access point named <strong>Inky_Hotspot</strong> will be created automatically.</p>
-        <form method="POST">
-            <input type="hidden" name="action" value="set_wifi">
-            <input type="text" name="ssid" placeholder="Network SSID (Name)" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="submit" value="Update Wi-Fi & Reboot">
-        </form>
-    </div>
-
 </body>
 </html>
