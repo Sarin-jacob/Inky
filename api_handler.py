@@ -72,9 +72,11 @@ def get_weather(api_key, city="Khordha,IN"):
 
     try:
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+        print(f"DEBUG: OPWM {url=}")
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
+        print(f"DEBUG: OPWM {data=}")
         
         parsed_data = {
             "temp": round(data["main"]["temp"]),
@@ -107,6 +109,7 @@ def get_todoist_tasks(api_key, limit=5):
         response.raise_for_status()
         
         tasks = response.json()
+        print(f"DEBUG: Todoist {tasks=}")
         
         parsed_tasks = []
         for t in tasks[:limit]:
