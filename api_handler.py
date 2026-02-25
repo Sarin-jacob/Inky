@@ -111,12 +111,24 @@ def get_todoist_tasks(api_key, limit=5):
         tasks = response.json()
         print(f"DEBUG: Todoist {tasks=}")
         
+        
         parsed_tasks = []
+        today = datetime.now().strftime("%Y-%m-%d")
+
         for t in tasks[:limit]:
+            due = t.get("due")
+
+            is_overdue = (
+                due is not None and
+                not due.get("is_recurring", False) and
+                due.get("date") is not None and
+                due["date"] < today
+            )
+
             parsed_tasks.append({
                 "content": t["content"],
-                "priority": t["priority"], # 4 is highest, 1 is normal
-                "is_overdue": "due" in t and t["due"]["is_recurring"] == False and t["due"]["date"] < datetime.now().strftime("%Y-%m-%d")
+                "priority": t["priority"],  # 4 highest
+                "is_overdue": is_overdue
             })
             
         save_to_cache('todoist.json', parsed_tasks)
