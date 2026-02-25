@@ -17,6 +17,8 @@ from api_handler import get_world_clocks, get_weather, get_todoist_tasks, get_pi
 os.environ['TZ'] = 'Asia/Kolkata'
 time.tzset()
 
+restart_flag=0 #make 1 when buttons are fixed
+
 UPLOAD_DIR = 'uploads'
 POTD_DIR= f"{UPLOAD_DIR}/potd"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -97,7 +99,7 @@ def button_callback(channel):
             break
 
     # Execute Action
-    if is_reboot_combo:
+    if is_reboot_combo and restart_flag:
         print("[!] Reboot combo detected!")
         threading.Thread(target=delayed_reboot).start()
         return
