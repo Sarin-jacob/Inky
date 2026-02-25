@@ -100,6 +100,7 @@ BTN_PAGE_3 = 19
 BTN_EXTRA  = 26
 
 def setup_gpio():
+    print("[*] Setting up GPIO buttons...", flush=True)
     try:
         GPIO.setmode(GPIO.BCM)
     except Exception:
@@ -107,12 +108,16 @@ def setup_gpio():
         
     buttons = [BTN_PAGE_1, BTN_PAGE_2, BTN_PAGE_3, BTN_EXTRA]
     for btn in buttons:
-        GPIO.setup(btn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        # Increased bouncetime to 1000ms to help with the ghost triggering
         try:
+            GPIO.setup(btn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            # Remove any lingering edge detection from previous runs
+            GPIO.remove_event_detect(btn) 
+            
+            # Attach the new interrupt
             GPIO.add_event_detect(btn, GPIO.FALLING, callback=button_callback, bouncetime=200)
-        except RuntimeError:
-            pass
+            print(f"[+] Successfully attached interrupt to GPIO {btn}", flush=True)
+        except Exception as e:
+            print(f"[-] FAILED to attach interrupt to GPIO {btn}: {e}", flush=True)
 
 def button_callback(channel):
     global needs_refresh
