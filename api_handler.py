@@ -109,6 +109,7 @@ def get_todoist_tasks(api_key, limit=5):
         response.raise_for_status()
         
         tasks = response.json()
+        tasks=tasks[0]
         print(f"DEBUG: Todoist {tasks=}")
         
         
