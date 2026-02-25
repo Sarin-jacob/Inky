@@ -66,11 +66,11 @@ def register_mdns():
 
     info = ServiceInfo(
         "_http._tcp.local.",
-        "Inky._http._tcp.local.",
+        "inky._http._tcp.local.",
         addresses=[socket.inet_aton(local_ip)],
         port=5000,
         properties=desc,
-        server="Inky.local.",
+        server="inky.local.",
     )
 
     zc = Zeroconf(ip_version=IPVersion.V4Only)
