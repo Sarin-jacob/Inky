@@ -130,6 +130,7 @@ def get_todoist_tasks(api_key, limit=5):
                 "priority": t["priority"],  # 4 highest
                 "is_overdue": is_overdue
             })
+            print(f"DEBUG TODOIST: {parsed_tasks}")
             
         save_to_cache('todoist.json', parsed_tasks)
         return parsed_tasks
