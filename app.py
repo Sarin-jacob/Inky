@@ -239,55 +239,65 @@ def index():
     return render_template('index.html', state=state)
 
 # --- HARDWARE DISPLAY LOOP ---
-def draw_display():
+def get_sensor_string():
+    sensor_str = "Sensor Error"
+    for _ in range(3):
+        try:
+            temp = dht_sensor.temperature
+            hum = dht_sensor.humidity
+            if temp is not None and hum is not None:
+                return f"Temp: {temp}C  |  Hum: {hum}%"
+        except Exception:
+            time.sleep(1.0)
+    return sensor_str
+
+def load_fonts():
+    try:
+        return ImageFont.truetype("fonts/roboto/Roboto-Black.ttf", 64), ImageFont.truetype("fonts/roboto/Roboto-Regular.ttf", 36)
+    except Exception:
+        return ImageFont.load_default(), ImageFont.load_default()
+
+def draw_partial_update(time_str, sensor_str):
+    """Blazing fast update of ONLY the clock and sensor bounding boxes"""
+    epd = EPD()
+    epd.init_part()
+    font_large, font_med = load_fonts()
+
+    # 1. Update Clock Box (X: 0->800, Y: 40->160)
+    img_clock = Image.new('1', (800, 120), 255)
+    draw_clock = ImageDraw.Draw(img_clock)
+    draw_clock.text((40, 60 - 40), time_str, font=font_large, fill=0)
+    epd.display_Partial(epd.getbuffer(img_clock), 0, 40, 800, 160)
+
+    # 2. Update Sensor Box (X: 0->800, Y: 380->480)
+    img_sensor = Image.new('1', (800, 100), 255)
+    draw_sensor = ImageDraw.Draw(img_sensor)
+    draw_sensor.text((40, 400 - 380), sensor_str, font=font_med, fill=0)
+    epd.display_Partial(epd.getbuffer(img_sensor), 0, 380, 800, 480)
+
+    epd.sleep()
+
+def draw_full_update(time_str, sensor_str):
+    """Deep flush of the entire screen to clear ghosting and draw full colors"""
     epd = EPD()
     epd.init()
     
-    # V2 requires TWO images
     image_black = Image.new('1', (800, 480), 255) 
     image_red = Image.new('1', (800, 480), 255) 
-    
-    draw_black = ImageDraw.Draw(image_black)
-    draw_red = ImageDraw.Draw(image_red)
-    
-    try:
-        font_large = ImageFont.truetype("fonts/roboto/Roboto-Black.ttf", 64)
-        font_med = ImageFont.truetype("fonts/roboto/Roboto-Regular.ttf", 36)
-    except Exception:
-        font_large = ImageFont.load_default()
-        font_med = ImageFont.load_default()
+    draw_black, draw_red = ImageDraw.Draw(image_black), ImageDraw.Draw(image_red)
+    font_large, font_med = load_fonts()
     
     if state.get('is_rebooting'):
         draw_red.text((200, 200), "REBOOTING...", font=font_large, fill=0)
         draw_black.text((200, 280), "Please wait 60 seconds", font=font_med, fill=0)
     else:
-        # Sensor Reading
-        sensor_str = "Sensor Error (Timeout)"
-        for _ in range(5):
-            try:
-                temp = dht_sensor.temperature
-                hum = dht_sensor.humidity
-                if temp is not None and hum is not None:
-                    sensor_str = f"Temp: {temp}C  |  Hum: {hum}%"
-                    break # Success! Exit the retry loop
-            except RuntimeError:
-                # DHT sensors require a solid 2 seconds between reads
-                time.sleep(2.0) 
-            except Exception as e:
-                sensor_str = f"Sensor Error: {e}"
-                break
-
         page = state['active_page']
-        
         if page == 1:
-            # PAGE 1: Clock & Calendar
-            now = datetime.now()
-            draw_black.text((40, 60), now.strftime("%I:%M %p"), font=font_large, fill=0) 
-            draw_red.text((40, 160), now.strftime("%A, %B %d"), font=font_med, fill=0) 
+            draw_black.text((40, 60), time_str, font=font_large, fill=0) 
+            draw_red.text((40, 160), datetime.now().strftime("%A, %B %d"), font=font_med, fill=0) 
             draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
             
         elif page == 2:
-            # PAGE 2: Todoist / Google Cal 
             source = state['calendar_source'].upper()
             draw_red.text((40, 40), f"{source} TASKS", font=font_large, fill=0) 
             draw_black.text((40, 140), "1. Example Task 1", font=font_med, fill=0)
@@ -295,39 +305,44 @@ def draw_display():
             draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
             
         elif page == 3:
-            # PAGE 3: Photo Viewer
-            path_b = os.path.join(UPLOAD_DIR, 'black_layer.bmp')
-            path_r = os.path.join(UPLOAD_DIR, 'red_layer.bmp')
-            
+            path_b, path_r = os.path.join(UPLOAD_DIR, 'black_layer.bmp'), os.path.join(UPLOAD_DIR, 'red_layer.bmp')
             if state['has_photo'] and os.path.exists(path_b) and os.path.exists(path_r):
-                bmp_black = Image.open(path_b)
-                bmp_red = Image.open(path_r)
-                image_black.paste(bmp_black, (0,0))
-                image_red.paste(bmp_red, (0,0))
+                image_black.paste(Image.open(path_b), (0,0))
+                image_red.paste(Image.open(path_r), (0,0))
             else:
                 draw_red.text((150, 200), "NO PHOTO UPLOADED", font=font_large, fill=0)
             
-    # Send both layers to V2 driver
     epd.display(epd.getbuffer(image_black), epd.getbuffer(image_red))
     epd.sleep()
 
 def hardware_loop():
     global needs_refresh
-    last_refresh_time = time.time()
+    last_drawn_page = None
+    last_drawn_time = None
+    last_full_refresh_time = 0
     
     while True:
-        time_elapsed = time.time() - last_refresh_time
-        # Auto-refresh Page 1 every 5 minutes
-        if needs_refresh or (state['active_page'] == 1 and time_elapsed > 300):
-            print("Refreshing display...")
-            try:
-                draw_display()
-            except Exception as e:
-                print(f"Draw Error: {e}")
-            needs_refresh = False
-            last_refresh_time = time.time()
+        now_str = datetime.now().strftime("%I:%M %p")
+        sensor_str = get_sensor_string()
+        time_since_full = time.time() - last_full_refresh_time
+        
+        # Determine if we MUST do a slow, full refresh (Page swap, forced refresh, or 1 hour passed to clear ghosting)
+        if needs_refresh or state['active_page'] != last_drawn_page or time_since_full > 3600:
+            print(f"[*] Dispatching FULL refresh. Page: {state['active_page']}")
+            draw_full_update(now_str, sensor_str)
             
-        time.sleep(1) 
+            last_drawn_page = state['active_page']
+            last_drawn_time = now_str
+            last_full_refresh_time = time.time()
+            needs_refresh = False
+            
+        # Determine if we can do a blazing-fast partial refresh (Only on Page 1, only if the minute ticked)
+        elif state['active_page'] == 1 and now_str != last_drawn_time:
+            print(f"[*] Dispatching PARTIAL update for time: {now_str}")
+            draw_partial_update(now_str, sensor_str)
+            last_drawn_time = now_str
+            
+        time.sleep(1)
 
 if __name__ == '__main__':
     load_state()
