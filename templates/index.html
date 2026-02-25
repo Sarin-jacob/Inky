@@ -8,13 +8,13 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased p-4 md:p-8">
 
-    <div class="max-w-3xl mx-auto space-y-6">
+    <div class="max-w-4xl mx-auto space-y-6">
         
         <header class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900">Inky Control Panel</h1>
-                    <p class="text-sm text-slate-500">Welcome back, Sarin. Manage your e-ink dashboard.</p>
+                    <p class="text-sm text-slate-500">Manage your smart e-ink dashboard.</p>
                 </div>
                 <div class="text-right">
                     <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Current State</span>
@@ -71,8 +71,8 @@
                         <span class="font-medium block">Mode 1</span>
                         <span class="text-xs text-slate-500">
                             {% if state.active_page == 1 %}Minimalist Clock
-                            {% elif state.active_page == 2 %}Task List
-                            {% else %}Single Photo{% endif %}
+                            {% elif state.active_page == 2 %}Todoist Task List
+                            {% else %}Single Photo Upload{% endif %}
                         </span>
                     </button>
                     
@@ -80,7 +80,7 @@
                             class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">Mode 2</span>
                         <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}World Clock (IST/CEST) & Weather
+                            {% if state.active_page == 1 %}World Clock & Weather
                             {% elif state.active_page == 2 %}Calendar Agenda
                             {% else %}Local Slideshow{% endif %}
                         </span>
@@ -91,56 +91,96 @@
                         <span class="font-medium block">Mode 3</span>
                         <span class="text-xs text-slate-500">
                             {% if state.active_page == 1 %}Custom API Push (B&W)
-                            {% elif state.active_page == 2 %}Scratchpad / Notes
+                            {% elif state.active_page == 2 %}Scratchpad Notes
                             {% else %}Picture of the Day{% endif %}
                         </span>
                     </button>
                 </form>
             </section>
-            
         </div>
 
         <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <h2 class="text-lg font-semibold mb-2">Upload Media</h2>
-            <p class="text-sm text-slate-500 mb-4">Upload an image for the Art Gallery. It will be automatically converted to the 3-color palette.</p>
-            <form method="POST" action="/media" enctype="multipart/form-data" class="flex items-center gap-4">
-                <input type="file" name="image" accept="image/jpeg, image/png" required
-                       class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
-                <button type="submit" class="bg-slate-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm">
-                    Upload
-                </button>
+            <h2 class="text-lg font-semibold mb-4 text-slate-900">Integrations & Settings</h2>
+            <form method="POST" action="/" class="space-y-6">
+                <input type="hidden" name="action" value="set_config">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Productivity</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Todoist API Token</label>
+                            <input type="password" name="todoist_api_key" value="{{ state.todoist_api_key | default('') }}" placeholder="Bearer token..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Calendar iCal URL (.ics)</label>
+                            <input type="text" name="calendar_ical_url" value="{{ state.calendar_ical_url | default('') }}" placeholder="https://calendar.google.com/..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Scratchpad Note (Page 2, Mode 3)</label>
+                            <textarea name="scratchpad_text" rows="3" placeholder="Buy milk, walk dog..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">{{ state.scratchpad_text | default('') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Environment & Art</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">OpenWeather API Key</label>
+                            <input type="password" name="openweather_api_key" value="{{ state.openweather_api_key | default('') }}" placeholder="OpenWeather key..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Picture of the Day Source</label>
+                            <select name="potd_source" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                                <option value="nasa" {% if state.potd_source == 'nasa' %}selected{% endif %}>NASA (Astronomy)</option>
+                                <option value="reddit" {% if state.potd_source == 'reddit' %}selected{% endif %}>Reddit (/r/EarthPorn)</option>
+                                <option value="unsplash" {% if state.potd_source == 'unsplash' %}selected{% endif %}>Unsplash (Nature)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Unsplash API Key (If applicable)</label>
+                            <input type="password" name="unsplash_api_key" value="{{ state.unsplash_api_key | default('') }}" placeholder="Unsplash Client ID..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 text-right">
+                    <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                        Save Configuration
+                    </button>
+                </div>
             </form>
         </section>
 
-        <section class="bg-slate-900 rounded-xl shadow-sm p-6 border border-slate-800 text-slate-300">
-            <h2 class="text-lg font-semibold text-white mb-2">API Push Mode (Page 1, Mode 3)</h2>
-            <p class="text-sm mb-4">To push a custom graph or image to the screen via your network, POST a B&W image to the endpoint below. The system will automatically diff the image and perform a blazing-fast partial update.</p>
-            <div class="bg-black/50 p-3 rounded text-xs font-mono text-emerald-400 overflow-x-auto">
-                curl -X POST -F "image=@my_graph.png" http://Inky.local:5000/api/push_image
-            </div>
-        </section>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <h2 class="text-lg font-semibold mb-2">Upload Photo</h2>
+                <p class="text-sm text-slate-500 mb-4">For Page 3, Mode 1.</p>
+                <form method="POST" action="/media" enctype="multipart/form-data" class="flex flex-col gap-3">
+                    <input type="file" name="image" accept="image/jpeg, image/png" required
+                           class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
+                    <button type="submit" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm w-full md:w-auto self-start">
+                        Upload to Frame
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-slate-900 rounded-xl shadow-sm p-6 border border-slate-800 text-slate-300">
+                <h2 class="text-lg font-semibold text-white mb-2">API Push Endpoint</h2>
+                <p class="text-sm mb-4">POST a B&W image here for instant partial updates (Page 1, Mode 3).</p>
+                <div class="bg-black/50 p-3 rounded text-xs font-mono text-emerald-400 overflow-x-auto break-all">
+                    curl -X POST -F "image=@graph.png" http://Inky.local:5000/api/push_image
+                </div>
+            </section>
+        </div>
 
         <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 border-t-4 border-t-slate-800">
-            <h2 class="text-lg font-semibold mb-4 text-slate-900">System & Wi-Fi</h2>
-            <form method="POST" action="/" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <input type="hidden" name="action" value="set_wifi">
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">Network SSID</label>
-                    <input type="text" name="ssid" placeholder="MyWiFi" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">Password</label>
-                    <input type="password" name="password" placeholder="••••••••" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <button type="submit" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-200 transition">
-                    Connect & Reboot
-                </button>
-            </form>
-
-            <hr class="my-6 border-slate-200">
-            
-            <div class="flex justify-between items-center">
-                <p class="text-sm text-slate-500">Hardware restart. (Also triggered by holding Button 1 + 3 for 5 seconds).</p>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-slate-900">System</h2>
                 <form method="POST" action="/">
                     <input type="hidden" name="action" value="reboot">
                     <button type="submit" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg border border-red-200 text-sm font-medium hover:bg-red-100 transition">
@@ -148,6 +188,21 @@
                     </button>
                 </form>
             </div>
+            
+            <form method="POST" action="/" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <input type="hidden" name="action" value="set_wifi">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Network SSID</label>
+                    <input type="text" name="ssid" placeholder="MyWiFi" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" name="password" placeholder="••••••••" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                </div>
+                <button type="submit" class="bg-white text-slate-700 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-100 transition shadow-sm">
+                    Connect Wi-Fi
+                </button>
+            </form>
         </section>
 
     </div>
