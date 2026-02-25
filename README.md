@@ -76,3 +76,6 @@ uv run app.py
 * **Web Interface:** Open a browser on any device connected to the same network and navigate to `http://<raspberry-pi-ip>:5000`.
 * **Hardware Buttons:** Press the physical buttons to instantly wake the screen and change the active page.
 
+---
+
+This project is usign assets from https://github.com/KalebClark/InfoWindow and started from the source code of said project.
