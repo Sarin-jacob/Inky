@@ -252,11 +252,9 @@ def get_sensor_string():
     return sensor_str
 
 def get_partial_buffer(img):
-    """Bypasses the driver's strict 800x480 size limit for cropped updates"""
-    buf = bytearray(img.convert('1').tobytes('raw'))
-    for i in range(len(buf)):
-        buf[i] ^= 0xFF # Invert bits for the e-ink hardware
-    return buf
+    """Bypasses the driver's strict 800x480 size limit for cropped updates.
+       (No bit-inversion needed here, partial LUT expects raw PIL polarity)"""
+    return bytearray(img.convert('1').tobytes('raw'))
 
 def load_fonts():
     try:
