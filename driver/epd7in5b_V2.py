@@ -306,6 +306,6 @@ class EPD:
         self.send_data(0XA5)
         
         epdconfig.delay_ms(2000)
-        epdconfig.module_exit()
+        # epdconfig.module_exit()
 ### END OF FILE ###
 
