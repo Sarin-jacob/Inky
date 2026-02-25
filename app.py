@@ -317,7 +317,7 @@ if __name__ == '__main__':
       
     zc, info = register_mdns()
 
-    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False))
+    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=80, debug=True, use_reloader=False))
     web_thread.daemon = True
     web_thread.start()
     
