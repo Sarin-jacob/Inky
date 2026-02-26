@@ -67,16 +67,12 @@ def push_partial_update(image_black, x1, y1, x2, y2):
         print(f"[Mock] Partial update triggered for box: ({x1}, {y1}, {x2}, {y2})")
         return
 
-    # Calculate width and height of the bounding box
-    box_width = x2 - x1
-    box_height = y2 - y1
-
     # Crop the exact region from the provided black image
     cropped_region = image_black.crop((x1, y1, x2, y2))
     
     epd = EPD()
     epd.init_part()
     
-    # Push ONLY the cropped region to the specific coordinates
-    epd.display_Partial(get_partial_buffer(cropped_region), x1, y1, box_width, box_height)
+    # FIX: Pass the absolute x2, y2 coordinates, NOT the calculated width/height!
+    epd.display_Partial(get_partial_buffer(cropped_region), x1, y1, x2, y2)
     epd.sleep()
