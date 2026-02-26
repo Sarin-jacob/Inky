@@ -3,7 +3,7 @@
 
 Inky is a highly modular, smart e-ink dashboard powered by a Raspberry Pi and a Waveshare 7.5" (V2) Black/White/Red screen.
 
-Rebuilt from the ground up for maximum flexibility, it features a 3-page layout with 3 distinct modes per page. Everything is managed through a sleek local web interface and controlled physically via GPIO hardware interrupts. It also includes an auto-diffing API endpoint to push custom graphs to the screen instantly.
+Rebuilt from the ground up for maximum flexibility, it features a 3-page layout with 3 distinct modes per page. Everything is managed through a sleek local web interface and controlled physically via GPIO hardware interrupts. It also includes an API endpoint to push custom graphs to the screen instantly.
 
 ## Features & Modes
 
