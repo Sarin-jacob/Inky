@@ -76,7 +76,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```bash
 git clone https://github.com/Sarin-jacob/Inky.git
 cd Inky
-git switch shrink
 ```
 
 ### 5. Install Python Dependencies
