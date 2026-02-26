@@ -195,6 +195,7 @@ def render_current_state(time_str, sensor_data):
             elif "error" in sensor_data:
                 draw_red.text((450, 410), "Sensor Read Error", font=font_med, fill=0)
             else:
+                draw_black.text((450, 380), "INDOOR SENSOR", font=font_small, fill=0)
                 # Load your custom icon images
                 try:
                     icon_thermo = Image.open("icons/thermo.png").convert("1").resize((32, 32))
