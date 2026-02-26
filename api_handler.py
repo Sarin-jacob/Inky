@@ -70,7 +70,7 @@ def get_world_clocks(tz_configs=None):
             tz_time = now_utc.astimezone(ZoneInfo(config["tz"]))
             additional_clocks.append({
                 "name": config["name"],
-                "time": tz_time.strftime("%H:%M") # 24hr format
+                "time": tz_time.strftime("%I:%M %p") # 24hr format
             })
         except Exception as e:
             print(f"[-] Invalid timezone config '{config.get('tz')}': {e}")

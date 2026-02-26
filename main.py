@@ -169,8 +169,8 @@ def render_current_state(time_str, sensor_data):
             draw_black.text((40, 220), "WORLD CLOCKS", font=font_small, fill=0)
             y_offset=260
             for clock in clocks['additional']:
-                draw_red.text((40, y_offset), f"{clock['name'].upper()}: {clock['time']}", font=font_med, fill=0)
-                y_offset+=40
+                draw_black.text((80, y_offset), f"{clock['name'].upper()}: {clock['time']}", font=font_med, fill=0)
+                y_offset+=60
 
             # --- RIGHT SIDE: WEATHER & SENSORS ---
             # Draw a subtle dividing line
@@ -472,8 +472,8 @@ def hardware_loop():
 
             y_offset = 260
             for clock in clocks['additional']:
-                draw_temp.text((40, y_offset), f"{clock['name'].upper()}: {clock['time']}", font=font_med, fill=0)
-                y_offset += 40
+                draw_temp.text((80, y_offset), f"{clock['name'].upper()}: {clock['time']}", font=font_med, fill=0)
+                y_offset += 60
                 
             push_partial_update(img_black_temp, *tbbox)
 
