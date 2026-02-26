@@ -131,7 +131,7 @@ You can instantly update the screen from another machine on your network by send
 curl -X POST -F "image=@my_custom_graph.png" http://Inky.local/api/push_image
 ```
 #### Example:
-Download [system_usage.py](https://raw.githubusercontent.com/Sarin-jacob/Inky/refs/heads/main/plugins/system_usage.py) and run the following after setting Inky to `Api push Mode`.
+Download [system_usage.py](https://raw.githubusercontent.com/Sarin-jacob/Inky/blob/main/plugins/system_usage.py) and run the following after setting Inky to `Api push Mode`.
 
 ```bash
 uv run system_usage.py
