@@ -483,7 +483,7 @@ def hardware_loop():
             
             # The new unified clock bounding box (X1: 40, Y1: 60, X2: 400, Y2: 150)
             lbbox = (40, 60, 400, 150)
-            tbbox = (80, 260, 420, 460)
+            tbbox = (80, 260, 400, 460)
             
             # Wipe the box clean (fill with 255/White) so the old time is erased
             draw_temp.rectangle(lbbox, fill=255) 
