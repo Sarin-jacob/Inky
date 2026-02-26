@@ -197,8 +197,8 @@ def render_current_state(time_str, sensor_data):
             else:
                 # Load your custom icon images
                 try:
-                    icon_thermo = Image.open("icons/thermo.png").convert("1").resize((24, 24))
-                    icon_drop = Image.open("icons/drop.png").convert("1").resize((24, 24))
+                    icon_thermo = Image.open("icons/thermo.png").convert("1").resize((32, 32))
+                    icon_drop = Image.open("icons/drop.png").convert("1").resize((32, 32))
                     
                     # Draw Thermometer Icon and Temp text
                     img_red.paste(icon_thermo, (450, 410)) # Pasting to img_red makes the icon red!
