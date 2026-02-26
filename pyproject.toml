@@ -19,7 +19,10 @@ dependencies = [
     "spidev>=3.8",
     "todoist-python>=8.1.4",
     "gpiozero",
-    "zeroconf"
+    "zeroconf",
+    "tzdata>=2025.3",
+    "icalendar>=7.0.2",
+    "recurring-ical-events>=3.8.1",
 ]
 
 [tool.uv.extra-build-dependencies]

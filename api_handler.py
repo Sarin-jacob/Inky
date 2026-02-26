@@ -1,0 +1,378 @@
+import os
+import json
+import time
+import requests
+from datetime import datetime
+import shutil
+from PIL import Image
+from utils import process_upload
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    # Fallback for older Python versions
+    import pytz
+    ZoneInfo = pytz.timezone
+
+import urllib.request
+from datetime import date
+try:
+    import icalendar
+    import recurring_ical_events
+except ImportError:
+    icalendar = None
+
+CACHE_DIR = 'cache'
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+# --- CACHE MANAGEMENT ---
+def get_cached_data(filename, max_age_seconds):
+    """Returns cached data if it exists and is fresh, else returns None."""
+    filepath = os.path.join(CACHE_DIR, filename)
+    if os.path.exists(filepath):
+        file_age = time.time() - os.path.getmtime(filepath)
+        if file_age < max_age_seconds:
+            try:
+                with open(filepath, 'r') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+    return None
+
+def save_to_cache(filename, data):
+    """Saves data to a JSON cache file."""
+    filepath = os.path.join(CACHE_DIR, filename)
+    with open(filepath, 'w') as f:
+        json.dump(data, f)
+
+# --- WORLD CLOCK HANDLER ---
+def get_world_clocks(tz_configs=None):
+    """
+    Returns formatted time strings for IST (Local) and up to 3 additional zones.
+    tz_configs should be a list of dicts: [{'name': 'CEST', 'tz': 'Europe/Paris'}, ...]
+    """
+    now_utc = datetime.now(ZoneInfo("UTC"))
+    
+    # Local Time (IST)
+    time_ist = now_utc.astimezone(ZoneInfo("Asia/Kolkata"))
+    
+    # Default fallback configs if none are provided
+    if not tz_configs:
+        tz_configs = [
+            {"name": "CEST", "tz": "Europe/Paris"},
+            {"name": "NY", "tz": "America/New_York"},
+            {"name": "TYO", "tz": "Asia/Tokyo"}
+        ]
+
+    additional_clocks = []
+    for config in tz_configs:
+        try:
+            # Parse the custom timezone
+            tz_time = now_utc.astimezone(ZoneInfo(config["tz"]))
+            additional_clocks.append({
+                "name": config["name"],
+                "time": tz_time.strftime("%I:%M %p") # 24hr format
+            })
+        except Exception as e:
+            print(f"[-] Invalid timezone config '{config.get('tz')}': {e}")
+            additional_clocks.append({
+                "name": config.get("name", "UNK"),
+                "time": "--:--"
+            })
+
+    return {
+        "local": time_ist.strftime("%I:%M %p"),
+        "local_date": time_ist.strftime("%A, %B %d"),
+        "additional": additional_clocks
+    }
+
+# --- WEATHER API (OpenWeatherMap) ---
+def download_and_convert_icon(icon_id):
+    """Downloads an OpenWeather icon and converts it using the proven 3-color palette logic."""
+    icon_dir = 'icons'
+    os.makedirs(icon_dir, exist_ok=True)
+    
+    path_b = os.path.join(icon_dir, f"{icon_id}_black.bmp")
+    path_r = os.path.join(icon_dir, f"{icon_id}_red.bmp")
+    
+    if os.path.exists(path_b) and os.path.exists(path_r):
+        return {"black": path_b, "red": path_r}
+        
+    try:
+        url = f"http://openweathermap.org/img/wn/{icon_id}@2x.png"
+        response = requests.get(url, stream=True, timeout=10)
+        response.raise_for_status()
+        
+        temp_png = os.path.join(icon_dir, f"temp_{icon_id}.png")
+        with open(temp_png, 'wb') as f:
+            f.write(response.content)
+            
+        # 1. Open the image and composite over white to handle transparency safely
+        img_raw = Image.open(temp_png).convert("RGBA")
+        bg = Image.new("RGBA", img_raw.size, (255, 255, 255, 255))
+        img = Image.alpha_composite(bg, img_raw).convert("RGB")
+        
+        # 2. THE PROCESS_UPLOAD PALETTE LOGIC
+        palettedata = [255, 255, 255,  0, 0, 0,  255, 0, 0] # White, Black, Red
+        palettedata.extend([0] * (768 - len(palettedata)))
+        palimage = Image.new('P', (1, 1))
+        palimage.putpalette(palettedata)
+        img_converted = img.quantize(palette=palimage)
+        
+        img_black = Image.new('1', img.size, 255)
+        img_red = Image.new('1', img.size, 255)
+        
+        p_black = img_black.load()
+        p_red = img_red.load()
+        p_old = img_converted.load()
+        
+        for y in range(img.size[1]):
+            for x in range(img.size[0]):
+                if p_old[x, y] == 1: p_black[x,y] = 0   # Draw to Black Layer
+                elif p_old[x, y] == 2: p_red[x,y] = 0   # Draw to Red Layer
+                
+        # 3. Save both layers with their unique icon IDs
+        img_black.save(path_b)
+        img_red.save(path_r)
+        
+        os.remove(temp_png)
+        return {"black": path_b, "red": path_r}
+        
+    except Exception as e:
+        print(f"[-] Icon processing error: {e}")
+        return None
+
+def get_weather(api_key, city="Bhubaneswar,IN"):
+    """Fetches detailed weather, downloads icons, and caches for 30 mins."""
+    if not api_key:
+        return {"error": "No API Key configured"}
+
+    cached = get_cached_data('weather.json', max_age_seconds=1800)
+    if cached:
+        return cached
+
+    try:
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Process the icon into two layers!
+        icon_id = data["weather"][0]["icon"]
+        icon_paths = download_and_convert_icon(icon_id)
+        
+        parsed_data = {
+            "city": data.get("name", city),
+            "temp": round(data["main"]["temp"]),
+            "temp_max": round(data["main"]["temp_max"]),
+            "temp_min": round(data["main"]["temp_min"]),
+            "feels_like": round(data["main"]["feels_like"]),
+            "description": data["weather"][0]["description"].title(),
+            "humidity": data["main"]["humidity"],
+            "wind_speed": round(data["wind"]["speed"]),
+            "icon_paths": icon_paths  # We are now saving the dictionary of paths
+        }
+        save_to_cache('weather.json', parsed_data)
+        return parsed_data
+        
+    except Exception as e:
+        print(f"[-] Weather API Error: {e}")
+        return {"error": "API Sync Failed"}
+
+# --- TODOIST API ---
+def get_todoist_tasks(api_key, limit=5):
+    """Fetches today's active tasks from Todoist. Caches for 15 minutes."""
+    if not api_key:
+        return [{"content": "No API Key configured", "priority": 1}]
+
+    cached = get_cached_data('todoist.json', max_age_seconds=900)
+    if cached:
+        return cached
+
+    try:
+        headers = {"Authorization": f"Bearer {api_key}"}
+        # Fetch tasks due today or overdue
+        url = "https://api.todoist.com/api/v1/tasks?filter=(today | overdue)"
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        tasks = response.json()
+        tasks=tasks['results']
+        print(f"DEBUG: Todoist {tasks=}")
+        
+        
+        parsed_tasks = []
+        today = datetime.now().strftime("%Y-%m-%d")
+
+        for t in tasks[:limit]:
+            due = t.get("due")
+
+            is_overdue = (
+                due is not None and
+                not due.get("is_recurring", False) and
+                due.get("date") is not None and
+                due["date"] < today
+            )
+
+            parsed_tasks.append({
+                "content": t["content"],
+                "priority": t["priority"],  # 4 highest
+                "is_overdue": is_overdue
+            })
+            print(f"DEBUG TODOIST: {parsed_tasks}")
+            
+        save_to_cache('todoist.json', parsed_tasks)
+        return parsed_tasks
+        
+    except Exception as e:
+        print(f"[-] Todoist API Error: {e}")
+        return [{"content": "API Sync Failed", "priority": 1}]
+    
+# --- PICTURE OF THE DAY HANDLER ---
+def download_image(url, save_path):
+    """Streams an image from a URL to a local file."""
+    try:
+        response = requests.get(url, stream=True, timeout=15)
+        response.raise_for_status()
+        with open(save_path, 'wb') as out_file:
+            shutil.copyfileobj(response.raw, out_file)
+        return True
+    except Exception as e:
+        print(f"[-] Image Download Error: {e}")
+        return False
+
+def get_picture_of_the_day(source="nasa", api_key="", upload_dir="uploads"):
+    """
+    Fetches a daily image from the specified source, downloads it, 
+    and processes it for the 3-color e-ink display.
+    Caches the metadata and image for 12 hours.
+    """
+    cache_meta_file = f'potd_meta_{source}.json'
+    raw_image_path = os.path.join(CACHE_DIR, f'potd_raw_{source}.jpg')
+    
+    # Check Cache (12 hours = 43200 seconds)
+    cached = get_cached_data(cache_meta_file, max_age_seconds=43200)
+    if cached and os.path.exists(raw_image_path):
+        return cached
+
+    img_url = None
+    meta_data = {"source": source, "title": "Unknown", "credit": "Unknown"}
+
+    try:
+        # 1. NASA Astronomy Picture of the Day
+        if source == "nasa":
+            key = api_key if api_key else "DEMO_KEY"
+            url = f"https://api.nasa.gov/planetary/apod?api_key={key}"
+            res = requests.get(url, timeout=10).json()
+            if "url" in res and res.get("media_type") == "image":
+                img_url = res.get("hdurl", res["url"])
+                meta_data["title"] = res.get("title", "NASA APOD")
+                meta_data["credit"] = res.get("copyright", "NASA")
+
+        # 2. Unsplash Random Landscape
+        elif source == "unsplash":
+            if not api_key:
+                return {"error": "Unsplash requires an API Key"}
+            url = f"https://api.unsplash.com/photos/random?orientation=landscape&query=nature&client_id={api_key}"
+            res = requests.get(url, timeout=10).json()
+            img_url = res["urls"]["regular"]
+            meta_data["title"] = res.get("description", "Unsplash Photo") or "Unsplash Photo"
+            meta_data["credit"] = res["user"]["name"]
+
+        # 3. Reddit (e.g., /r/EarthPorn) - No API Key needed!
+        elif source == "reddit":
+            url = "https://www.reddit.com/r/EarthPorn/top.json?limit=5&t=day"
+            headers = {"User-Agent": "InkyDashboard/1.0 (RaspberryPi)"} # Reddit requires a custom User-Agent
+            res = requests.get(url, headers=headers, timeout=10).json()
+            
+            # Find the first post that is actually a direct image link
+            for post in res["data"]["children"]:
+                post_url = post["data"]["url"]
+                if post_url.endswith(('.jpg', '.jpeg', '.png')):
+                    img_url = post_url
+                    meta_data["title"] = post["data"]["title"]
+                    meta_data["credit"] = f"u/{post['data']['author']}"
+                    break
+
+        # Download and Process
+        if img_url and download_image(img_url, raw_image_path):
+            print(f"[*] Successfully downloaded {source} POTD. Processing palette...")
+            # This slices the raw image into the Black and Red BMP layers for Page 3!
+            process_upload(raw_image_path, upload_dir)
+            save_to_cache(cache_meta_file, meta_data)
+            return meta_data
+        else:
+            return {"error": "Failed to find or download a valid image."}
+
+    except Exception as e:
+        print(f"[-] POTD API Error ({source}): {e}")
+        return {"error": f"API Request Failed: {str(e)}"}
+    
+# --- CALENDAR (iCal) HANDLER ---
+def get_calendar_events(ical_url, limit=6):
+    """
+    Fetches an .ics calendar URL, parses recurring events, 
+    and returns a sorted list of today's upcoming meetings.
+    Caches for 30 minutes.
+    """
+    if not ical_url or not icalendar:
+        return [{"title": "No Calendar URL or missing 'icalendar' lib", "time": ""}]
+
+    cache_file = 'calendar_events.json'
+    cached = get_cached_data(cache_file, max_age_seconds=1800)
+    if cached:
+        return cached
+
+    raw_ical_path = os.path.join(CACHE_DIR, 'calendar.ics')
+
+    try:
+        # Download the .ics file 
+        # (Using urllib with a custom header because some Google/Apple calendars block basic python requests)
+        req = urllib.request.Request(ical_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response, open(raw_ical_path, 'wb') as out_file:
+            out_file.write(response.read())
+
+        # Parse the calendar
+        with open(raw_ical_path, 'r') as f:
+            cal = icalendar.Calendar.from_ical(f.read())
+
+        # Extract events happening TODAY (handles recurring RRULEs perfectly)
+        today = date.today()
+        events_today = recurring_ical_events.of(cal).at(today)
+        
+        parsed_events = []
+        for event in events_today:
+            # Extract start time
+            start_dt = event["DTSTART"].dt
+            
+            # Handle full-day events (they are parsed as 'date' objects instead of 'datetime')
+            if isinstance(start_dt, date) and not isinstance(start_dt, datetime):
+                time_str = "All Day"
+            else:
+                # Convert to local time (IST) and format
+                local_dt = start_dt.astimezone(ZoneInfo("Asia/Kolkata"))
+                time_str = local_dt.strftime("%I:%M %p")
+
+            # Clean up the event summary/title
+            title = str(event.get("SUMMARY", "Busy"))
+            
+            parsed_events.append({
+                "title": title,
+                "time": time_str,
+                "timestamp": start_dt.timestamp() if isinstance(start_dt, datetime) else 0
+            })
+
+        # Sort chronologically by time
+        parsed_events.sort(key=lambda x: x.get("timestamp", 0))
+        
+        # Remove the timestamp field before returning/caching and limit the results
+        final_list = [{"title": e["title"], "time": e["time"]} for e in parsed_events[:limit]]
+        
+        if not final_list:
+             final_list = [{"title": "No events scheduled for today!", "time": ""}]
+             
+        save_to_cache(cache_file, final_list)
+        return final_list
+
+    except Exception as e:
+        print(f"[-] Calendar API Error: {e}")
+        return [{"title": "Failed to sync calendar", "time": ""}]
