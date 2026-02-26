@@ -251,7 +251,7 @@ def render_current_state(time_str, sensor_data):
                     
                 # Draw the author slightly below the quote in Red
                 y_offset += 20
-                draw_red.text((40, y_offset), f"— {author}", font=font_a, fill=0)
+                draw_red.text((80, y_offset), f"— {author}", font=font_a, fill=0)
             
             # Keep a small clock at the very bottom so you don't lose track of time!
             draw_black.text((40, 440), f"Local: {time_str}", font=font_small, fill=0)
@@ -446,15 +446,6 @@ def hardware_loop():
         if is_quotes_active and time_since_slide >= slide_interval:
             flag_full_refresh=True
         
-        # Local time update on Quotes
-        if is_quotes_active and now_str != last_drawn_time and not flag_full_refresh:
-            img_black_temp, _ = create_blank_layers()
-            draw_temp = ImageDraw.Draw(img_black_temp)
-            draw_temp.text((40, 440), f"Local: {now_str}", font=font_small, fill=0)
-            lbbox = (40, 440, 220, 510) 
-            push_partial_update(img_black_temp, *lbbox)
-            last_drawn_time = now_str
-        
         # 1. API Push Partial Update (Page 1, Mode 3 B&W Diff)
         if flag_partial_refresh and partial_bbox:
             print(f"[*] Executing targeted API partial update for box: {partial_bbox}")
@@ -508,6 +499,16 @@ def hardware_loop():
             # Push ONLY the specific box to the screen using our absolute coordinates
             push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
+            
+        # Local time update on Quotes
+        elif is_quotes_active and now_str != last_drawn_time and not flag_full_refresh:
+            img_black_temp, _ = create_blank_layers()
+            draw_temp = ImageDraw.Draw(img_black_temp)
+            draw_temp.text((40, 440), f"Local: {now_str}", font=font_small, fill=0)
+            lbbox = (40, 440, 220, 510) 
+            push_partial_update(img_black_temp, *lbbox)
+            last_drawn_time = now_str
+        
             
         time.sleep(1)
 
