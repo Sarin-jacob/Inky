@@ -388,28 +388,28 @@
         // Initialize Lucide Icons
         lucide.createIcons();
 
-        // Dark Mode Logic
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement;
-        
-        // Check for saved theme preference or use OS preference
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            htmlElement.classList.add('dark');
-        } else {
-            htmlElement.classList.remove('dark');
-        }
-
-        themeToggleBtn.addEventListener('click', () => {
-            htmlElement.classList.toggle('dark');
-            if (htmlElement.classList.contains('dark')) {
-                localStorage.theme = 'dark';
-            } else {
-                localStorage.theme = 'light';
-            }
-        });
-
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('api-push-url').textContent = `http://${window.location.host}/api/push_image`;
+            
+                // Dark Mode Logic
+                const themeToggleBtn = document.getElementById('theme-toggle');
+                const htmlElement = document.documentElement;
+                
+                // Check for saved theme preference or use OS preference
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    htmlElement.classList.add('dark');
+                } else {
+                    htmlElement.classList.remove('dark');
+                }
+
+                themeToggleBtn.addEventListener('click', () => {
+                    htmlElement.classList.toggle('dark');
+                    if (htmlElement.classList.contains('dark')) {
+                        localStorage.theme = 'dark';
+                    } else {
+                        localStorage.theme = 'light';
+                    }
+                });
             
             // 1. Fetch Slideshow Data
             fetch('/api/slides')
