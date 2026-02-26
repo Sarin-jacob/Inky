@@ -254,7 +254,7 @@ def render_current_state(time_str, sensor_data):
                 draw_red.text((80, y_offset), f"— {author}", font=font_a, fill=0)
             
             # Keep a small clock at the very bottom so you don't lose track of time!
-            draw_black.text((40, 440), f"Local: {time_str}", font=font_small, fill=0)
+            draw_black.text((540, 440), f"Local: {time_str}", font=font_small, fill=0)
             
         elif mode == 3: # Custom API Push (B&W Only)
             api_img_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
@@ -504,8 +504,8 @@ def hardware_loop():
         elif is_quotes_active and now_str != last_drawn_time and not flag_full_refresh:
             img_black_temp, _ = create_blank_layers()
             draw_temp = ImageDraw.Draw(img_black_temp)
-            draw_temp.text((40, 440), f"Local: {now_str}", font=font_small, fill=0)
-            lbbox = (40, 440, 200, 510) 
+            draw_temp.text((540, 440), f"Local: {now_str}", font=font_small, fill=0)
+            lbbox = (540, 440, 700, 510) 
             push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
         
