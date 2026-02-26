@@ -245,66 +245,40 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
     def api_push_image():
         """
         The dedicated endpoint for Page 1, Mode 3 (Custom B&W API Push).
-        Intercepts the upload, forces exactly 800x480 B&W, and calculates the diff.
+        Intercepts the upload, forces 800x480 B&W, and triggers a full-screen partial update.
         """
-        # Security check: Ensure we are actually on the right page/mode to receive this
-        if state_ref['active_page'] != 1 or state_ref['active_mode'] != 3:
+        if state_ref.get('active_page') != 1 or state_ref.get('active_mode') != 3:
             return jsonify({"error": "Device is not currently in API Push mode (Page 1, Mode 3)."}), 403
 
         if 'image' not in request.files:
             return jsonify({"error": "No image provided"}), 400
             
         file = request.files['image']
-        new_image_path = os.path.join(UPLOAD_DIR, 'api_new.bmp')
-        old_image_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
+        current_image_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
         
-        # --- NEW: Force exactly 800x480 B&W format immediately upon upload ---
+        # Check if this is the first push before we overwrite the file
+        is_first_push = not os.path.exists(current_image_path)
+        
         try:
-            # Open directly from the memory stream, resize, and convert to 1-bit B&W
+            # Force exactly 800x480 B&W format and overwrite the current image directly
             img = Image.open(file).convert('1').resize((800, 480))
-            img.save(new_image_path, format='BMP')
+            img.save(current_image_path, format='BMP')
         except Exception as e:
             return jsonify({"error": f"Failed to process image: {e}"}), 400
-        # ---------------------------------------------------------------------
         
-        # If this is the first ever push, we need a full refresh to set the baseline
-        if not os.path.exists(old_image_path):
-            os.rename(new_image_path, old_image_path)
+        # Check for force_full override OR if it's the very first image
+        if request.form.get('force_full', 'false').lower() == 'true' or is_first_push:
             trigger_full_refresh()
-            return jsonify({"status": "success", "update_type": "full_refresh_baseline"})
-
-        # Calculate the B&W difference
-        bbox, _ = calculate_bw_diff(old_image_path, new_image_path)
-        
-        if not bbox:
-            return jsonify({"status": "success", "update_type": "none", "message": "Images are identical."})
+            return jsonify({"status": "success", "update_type": "full_refresh"})
             
-        # --- ENFORCE E-INK BYTE ALIGNMENT (Multiples of 8) ---
-        x1, y1, x2, y2 = bbox
-        
-        # Floor x1 to the nearest 8, Ceil x2 to the nearest 8
-        x1_aligned = max(0, (x1 // 8) * 8)
-        x2_aligned = min(800, ((x2 + 7) // 8) * 8)
-        
-        aligned_bbox = (x1_aligned, y1, x2_aligned, y2)
-        # -----------------------------------------------------
-
-        # Move new image to current
-        os.replace(new_image_path, old_image_path)
-        
-        # Check for force_full override in the request
-        if request.form.get('force_full', 'false').lower() == 'true':
-            trigger_full_refresh()
-            return jsonify({"status": "success", "update_type": "full_refresh_forced"})
-            
-        # Tell the main thread to execute a partial update with these exact, safe coordinates!
-        trigger_partial_refresh(aligned_bbox)
+        # Tell the main thread to execute a partial update on the ENTIRE 800x480 canvas
+        full_screen_bbox = (0, 0, 800, 480)
+        trigger_partial_refresh(full_screen_bbox)
         
         return jsonify({
             "status": "success", 
-            "update_type": "partial", 
-            "bounding_box": aligned_bbox,
-            "original_bbox": bbox
+            "update_type": "partial_fullscreen", 
+            "bounding_box": full_screen_bbox
         })
 
     return app
