@@ -393,6 +393,7 @@ def hardware_loop():
             if mode == 1:
                 # Mode 1 Minimalist Clock Bounding Box coordinates
                 bbox = (40, 60, 400, 160)
+                draw_temp.rectangle(bbox, fill=255)
                 draw_temp.text((40, 60), now_str, font=font_large, fill=0)
             else:
                 # Mode 2 World Clock Bounding Box coordinates
