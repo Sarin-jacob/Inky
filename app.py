@@ -245,7 +245,7 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
     def api_push_image():
         """
         The dedicated endpoint for Page 1, Mode 3 (Custom B&W API Push).
-        Expects a B&W image file. Calculates the diff and triggers a partial update.
+        Intercepts the upload, forces exactly 800x480 B&W, and calculates the diff.
         """
         # Security check: Ensure we are actually on the right page/mode to receive this
         if state_ref['active_page'] != 1 or state_ref['active_mode'] != 3:
@@ -258,7 +258,14 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         new_image_path = os.path.join(UPLOAD_DIR, 'api_new.bmp')
         old_image_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
         
-        file.save(new_image_path)
+        # --- NEW: Force exactly 800x480 B&W format immediately upon upload ---
+        try:
+            # Open directly from the memory stream, resize, and convert to 1-bit B&W
+            img = Image.open(file).convert('1').resize((800, 480))
+            img.save(new_image_path, format='BMP')
+        except Exception as e:
+            return jsonify({"error": f"Failed to process image: {e}"}), 400
+        # ---------------------------------------------------------------------
         
         # If this is the first ever push, we need a full refresh to set the baseline
         if not os.path.exists(old_image_path):
@@ -275,14 +282,9 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         # --- ENFORCE E-INK BYTE ALIGNMENT (Multiples of 8) ---
         x1, y1, x2, y2 = bbox
         
-        # Floor x1 to the nearest 8
-        x1_aligned = (x1 // 8) * 8
-        # Ceil x2 to the nearest 8
-        x2_aligned = ((x2 + 7) // 8) * 8
-        
-        # Clamp to screen bounds to prevent out-of-bounds crashes
-        x1_aligned = max(0, x1_aligned)
-        x2_aligned = min(800, x2_aligned)
+        # Floor x1 to the nearest 8, Ceil x2 to the nearest 8
+        x1_aligned = max(0, (x1 // 8) * 8)
+        x2_aligned = min(800, ((x2 + 7) // 8) * 8)
         
         aligned_bbox = (x1_aligned, y1, x2_aligned, y2)
         # -----------------------------------------------------
@@ -295,7 +297,7 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
             trigger_full_refresh()
             return jsonify({"status": "success", "update_type": "full_refresh_forced"})
             
-        # Execute partial update with the safely aligned coordinates
+        # Tell the main thread to execute a partial update with these exact, safe coordinates!
         trigger_partial_refresh(aligned_bbox)
         
         return jsonify({
