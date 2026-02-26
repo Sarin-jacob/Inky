@@ -9,7 +9,6 @@ import io
 import collections
 import psutil
 import requests
-import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 
 # --- CONFIGURATION ---
@@ -40,8 +39,15 @@ def get_system_temp():
 
 def load_font(size):
     try:
-        # Tries to load standard OS fonts
-        return ImageFont.truetype("arial.ttf", size)
+        # On Windows 'arial.ttf', Mac 'Arial.ttf', Linux often 'DejaVuSans.ttf' or 'FreeSans.ttf'
+        # Fallback list to try
+        font_names = ["arial.ttf", "Arial.ttf", "DejaVuSans.ttf", "FreeSans.ttf"]
+        for font in font_names:
+            try:
+                return ImageFont.truetype(font, size)
+            except OSError:
+                continue
+        return ImageFont.load_default()
     except Exception:
         return ImageFont.load_default()
 
@@ -52,19 +58,24 @@ def push_to_inky(pil_image):
     
     try:
         print(f"[*] Pushing frame to {API_URL}...")
-        res = requests.post(API_URL, files={'image': ('graph.png', img_byte_arr, 'image/png')})
-        print(f"[+] Server replied: {res.json()['update_type']}")
+        # Note: Added timeout to prevent hanging if Pi is offline
+        res = requests.post(API_URL, files={'image': ('graph.png', img_byte_arr, 'image/png')}, timeout=5)
+        if res.status_code == 200:
+            print(f"[+] Server replied: {res.json().get('update_type', 'success')}")
+        else:
+            print(f"[-] Server error: {res.status_code}")
     except Exception as e:
         print(f"[-] Push failed: {e}")
 
 if __name__ == '__main__':
     print("=== Sweeping Bar Graph Monitor ===")
     
-    # Initialize the base canvas state
+    # Initialize the base canvas state (800x480 is the strict e-ink resolution)
     canvas = Image.new('1', (800, 480), 255) # 255 = White
     draw = ImageDraw.Draw(canvas)
     
-    font_title = load_font(48)
+    # Reduced font size from 48 to 32 to prevent text cutoff
+    font_title = load_font(32) 
     font_labels = load_font(24)
     
     # Draw static gridlines and labels
@@ -87,9 +98,13 @@ if __name__ == '__main__':
             temp_val = get_system_temp()
             
             # 1. Clear the top text area to draw fresh stats
+            # Clears box from (40,20) to (760,100)
             draw.rectangle([(40, 20), (760, 100)], fill=255)
+            
             stats_text = f"CPU: {cpu_val}%   |   RAM: {ram_val}%   |   TEMP: {temp_val}"
-            draw.text((40, 40), stats_text, font=font_title, fill=0)
+            
+            # Center the text or left align? Left align at 40 is safe now with size 32.
+            draw.text((40, 50), stats_text, font=font_title, fill=0)
             
             # 2. Calculate the sweeping X position
             current_idx = tick % MAX_BARS
@@ -104,10 +119,11 @@ if __name__ == '__main__':
             draw.rectangle([(clear_x1, 320), (clear_x2, 440)], fill=255) # Clear RAM path
             
             # 4. Draw the new vertical bars
+            # Scale height (0-100%) to pixels (0-100px)
             cpu_h = int((cpu_val / 100) * MAX_HEIGHT)
             ram_h = int((ram_val / 100) * MAX_HEIGHT)
             
-            # CPU Bar
+            # CPU Bar (Top is Y_START - Height)
             draw.rectangle([(x_pos, CPU_Y_START - cpu_h), (x_pos + BAR_WIDTH, CPU_Y_START)], fill=0)
             # RAM Bar
             draw.rectangle([(x_pos, RAM_Y_START - ram_h), (x_pos + BAR_WIDTH, RAM_Y_START)], fill=0)
