@@ -159,9 +159,18 @@ def render_current_state(time_str, sensor_data):
             draw_red.text((40, 150), datetime.now().strftime("%A, %B %d"), font=font_med, fill=0)
             
             # Secondary Clocks
-            clocks = get_world_clocks()
+            tz_configs = [
+                {"name": state.get('tz1_name', 'CEST'), "tz": state.get('tz1_zone', 'Europe/Paris')},
+                {"name": state.get('tz2_name', 'NY'), "tz": state.get('tz2_zone', 'America/New_York')},
+                {"name": state.get('tz3_name', 'TYO'), "tz": state.get('tz3_zone', 'Asia/Tokyo')}
+            ]
+            
+            clocks = get_world_clocks(tz_configs)
             draw_black.text((40, 220), "WORLD CLOCKS", font=font_small, fill=0)
-            draw_black.text((40, 260), f"CEST : {clocks['cest']}", font=font_med, fill=0)
+            y_offset=260
+            for clock in clocks['additional']:
+                draw_red.text((40, y_offset), f"{clock['name'].upper()}: {clock['time']}", font=font_med, fill=0)
+                y_offset+=40
 
             # --- RIGHT SIDE: WEATHER & SENSORS ---
             # Draw a subtle dividing line
@@ -445,16 +454,31 @@ def hardware_loop():
             
             img_black_temp, _ = create_blank_layers()
             draw_temp = ImageDraw.Draw(img_black_temp)
+
+            tz_configs = [
+                    {"name": state.get('tz1_name', 'CEST'), "tz": state.get('tz1_zone', 'Europe/Paris')},
+                    {"name": state.get('tz2_name', 'NY'), "tz": state.get('tz2_zone', 'America/New_York')},
+                    {"name": state.get('tz3_name', 'TYO'), "tz": state.get('tz3_zone', 'Asia/Tokyo')}
+                ]
+            clocks = get_world_clocks(tz_configs)
             
             # The new unified clock bounding box (X1: 40, Y1: 60, X2: 400, Y2: 150)
-            bbox = (40, 60, 400, 150)
+            lbbox = (40, 60, 400, 150)
+            tbbox = (40, 260, 400, 400)
             
             # Wipe the box clean (fill with 255/White) so the old time is erased
-            draw_temp.rectangle(bbox, fill=255) 
+            draw_temp.rectangle(lbbox, fill=255) 
             draw_temp.text((40, 60), now_str, font=font_large, fill=0)
 
+            y_offset = 260
+            for clock in clocks['additional']:
+                draw_temp.text((40, y_offset), f"{clock['name'].upper()}: {clock['time']}", font=font_med, fill=0)
+                y_offset += 40
+                
+            push_partial_update(img_black_temp, *tbbox)
+
             # Push ONLY the specific box to the screen using our absolute coordinates
-            push_partial_update(img_black_temp, *bbox)
+            push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
             
         time.sleep(1)

@@ -45,20 +45,44 @@ def save_to_cache(filename, data):
         json.dump(data, f)
 
 # --- WORLD CLOCK HANDLER ---
-def get_world_clocks():
-    """Returns formatted time strings for IST (Local) and CEST."""
+def get_world_clocks(tz_configs=None):
+    """
+    Returns formatted time strings for IST (Local) and up to 3 additional zones.
+    tz_configs should be a list of dicts: [{'name': 'CEST', 'tz': 'Europe/Paris'}, ...]
+    """
     now_utc = datetime.now(ZoneInfo("UTC"))
     
     # Local Time (IST)
     time_ist = now_utc.astimezone(ZoneInfo("Asia/Kolkata"))
     
-    # Central European Summer Time (CEST - typically maps to Europe/Paris or Europe/Berlin)
-    time_cest = now_utc.astimezone(ZoneInfo("Europe/Paris")) 
-    
+    # Default fallback configs if none are provided
+    if not tz_configs:
+        tz_configs = [
+            {"name": "CEST", "tz": "Europe/Paris"},
+            {"name": "NY", "tz": "America/New_York"},
+            {"name": "TYO", "tz": "Asia/Tokyo"}
+        ]
+
+    additional_clocks = []
+    for config in tz_configs:
+        try:
+            # Parse the custom timezone
+            tz_time = now_utc.astimezone(ZoneInfo(config["tz"]))
+            additional_clocks.append({
+                "name": config["name"],
+                "time": tz_time.strftime("%H:%M") # 24hr format
+            })
+        except Exception as e:
+            print(f"[-] Invalid timezone config '{config.get('tz')}': {e}")
+            additional_clocks.append({
+                "name": config.get("name", "UNK"),
+                "time": "--:--"
+            })
+
     return {
         "local": time_ist.strftime("%I:%M %p"),
         "local_date": time_ist.strftime("%A, %B %d"),
-        "cest": time_cest.strftime("%H:%M") # 24hr format is usually better for secondary alarms
+        "additional": additional_clocks
     }
 
 # --- WEATHER API (OpenWeatherMap) ---

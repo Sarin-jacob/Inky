@@ -62,6 +62,16 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
                 state_ref['potd_source'] = request.form.get('potd_source', 'nasa').strip()
                 state_ref['calendar_ical_url'] = request.form.get('calendar_ical_url', '').strip()
                 state_ref['scratchpad_text'] = request.form.get('scratchpad_text', '').strip()
+
+                state_ref['tz1_name'] = request.form.get('tz1_name', 'CEST')
+                state_ref['tz1_zone'] = request.form.get('tz1_zone', 'Europe/Paris')
+                
+                state_ref['tz2_name'] = request.form.get('tz2_name', 'NY')
+                state_ref['tz2_zone'] = request.form.get('tz2_zone', 'America/New_York')
+                
+                state_ref['tz3_name'] = request.form.get('tz3_name', 'TYO')
+                state_ref['tz3_zone'] = request.form.get('tz3_zone', 'Asia/Tokyo')
+
                 trigger_full_refresh()
 
             save_state(state_ref)
