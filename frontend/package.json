@@ -1,0 +1,10 @@
+{
+  "name": "inky-dashboard",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
