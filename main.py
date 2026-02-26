@@ -152,10 +152,47 @@ def render_current_state(time_str, sensor_str):
     # PAGE 1: THE DAILY HUB
     # ==========================================
     elif page == 1:
-        if mode == 1: # Minimalist Clock
+        if mode ==1: # Unified Time & Weather Dashboard
+            # --- LEFT SIDE: TIME & DATE ---
+            # Main local time
             draw_black.text((40, 60), time_str, font=font_large, fill=0)
-            draw_red.text((40, 160), datetime.now().strftime("%A, %B %d"), font=font_med, fill=0)
-            draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
+            draw_red.text((40, 150), datetime.now().strftime("%A, %B %d"), font=font_med, fill=0)
+            
+            # Secondary Clocks
+            clocks = get_world_clocks()
+            draw_black.text((40, 220), "WORLD CLOCKS", font=font_small, fill=0)
+            draw_black.text((40, 260), f"CEST : {clocks['cest']}", font=font_med, fill=0)
+
+            # --- RIGHT SIDE: WEATHER & SENSORS ---
+            # Draw a subtle dividing line
+            draw_black.line([(420, 40), (420, 440)], fill=0, width=2)
+            
+            weather_key = state.get('openweather_api_key', '')
+            weather = get_weather(weather_key)
+            
+            if "error" in weather:
+                draw_red.text((450, 60), weather["error"], font=font_med, fill=0)
+            else:
+                # Weather Icon
+                if weather.get("icon_path") and os.path.exists(weather.get("icon_path")):
+                    weather_icon = Image.open(weather["icon_path"])
+                    img_black.paste(weather_icon, (450, 60))
+                
+                # Big Temperature
+                draw_black.text((580, 60), f"{weather['temp']}°C", font=font_large, fill=0)
+                
+                # City & Conditions
+                draw_black.text((450, 160), weather['city'].upper(), font=font_small, fill=0)
+                draw_red.text((450, 200), weather['description'], font=font_med, fill=0)
+                
+                # Extra Weather Stats
+                stats_str = f"H: {weather['temp_max']}°  L: {weather['temp_min']}°\nFeels like: {weather['feels_like']}°\nWind: {weather['wind_speed']} m/s"
+                draw_black.text((450, 260), stats_str, font=font_small, fill=0)
+
+            # --- BOTTOM: DHT11 SENSOR ---
+            # You can eventually replace 'S:' with a house/thermometer icon here!
+            draw_black.text((450, 380), "INDOOR SENSOR", font=font_small, fill=0)
+            draw_black.text((450, 410), sensor_str, font=font_med, fill=0)
             
         elif mode == 2: # World Clock / Weather
             clocks = get_world_clocks()
@@ -381,27 +418,20 @@ def hardware_loop():
             last_full_refresh_time = time.time()
             
         # 3. Targeted Clock Partial Update
-        # Fires only on Page 1 (Modes 1 & 2) when the minute changes, and avoids overlapping with full refreshes.
-        elif state['active_page'] == 1 and state.get('active_mode', 1) in [1, 2] and now_str != last_drawn_time and not flag_full_refresh:
+        elif state['active_page'] == 1 and state.get('active_mode', 1) == 1 and now_str != last_drawn_time and not flag_full_refresh:
             print(f"[*] Fast partial update for clock tick: {now_str}")
             
-            # Create a blank black layer
             img_black_temp, _ = create_blank_layers()
             draw_temp = ImageDraw.Draw(img_black_temp)
             
-            mode = state.get('active_mode', 1)
-            if mode == 1:
-                # Mode 1 Minimalist Clock Bounding Box coordinates
-                bbox = (40, 60, 400, 160)
-                draw_temp.rectangle(bbox, fill=255)
-                draw_temp.text((40, 60), now_str, font=font_large, fill=0)
-            else:
-                # Mode 2 World Clock Bounding Box coordinates
-                clocks = get_world_clocks()
-                bbox = (40, 40, 400, 100)
-                draw_temp.text((40, 40), f"Local: {clocks['local']}", font=font_med, fill=0)
+            # The new unified clock bounding box (X1: 40, Y1: 60, X2: 400, Y2: 150)
+            bbox = (40, 60, 400, 150)
+            
+            # Wipe the box clean (fill with 255/White) so the old time is erased
+            draw_temp.rectangle(bbox, fill=255) 
+            draw_temp.text((40, 60), now_str, font=font_large, fill=0)
 
-            # Push ONLY the specific box to the screen
+            # Push ONLY the specific box to the screen using our absolute coordinates
             push_partial_update(img_black_temp, *bbox)
             last_drawn_time = now_str
             

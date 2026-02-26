@@ -4,6 +4,7 @@ import time
 import requests
 from datetime import datetime
 import shutil
+from PIL import Image
 from utils import process_upload
 try:
     from zoneinfo import ZoneInfo
@@ -61,8 +62,46 @@ def get_world_clocks():
     }
 
 # --- WEATHER API (OpenWeatherMap) ---
-def get_weather(api_key, city="Khordha,IN"):
-    """Fetches current weather. Caches for 30 minutes."""
+def download_and_convert_icon(icon_id):
+    """Downloads an OpenWeather icon and converts it to a 1-bit e-ink BMP."""
+    icon_dir = 'icons'
+    os.makedirs(icon_dir, exist_ok=True)
+    
+    bmp_path = os.path.join(icon_dir, f"{icon_id}.bmp")
+    
+    # If we already have it, just return the path
+    if os.path.exists(bmp_path):
+        return bmp_path
+        
+    try:
+        # Use @2x for a larger, crisper image
+        url = f"http://openweathermap.org/img/wn/{icon_id}@2x.png"
+        response = requests.get(url, stream=True, timeout=10)
+        response.raise_for_status()
+        
+        # Save temp PNG
+        temp_png = os.path.join(icon_dir, f"temp_{icon_id}.png")
+        with open(temp_png, 'wb') as f:
+            f.write(response.content)
+            
+        # Convert to 1-bit Black and White BMP
+        img = Image.open(temp_png)
+        # Create a white background to replace transparency
+        background = Image.new("RGBA", img.size, (255, 255, 255))
+        alpha_composite = Image.alpha_composite(background, img.convert("RGBA"))
+        
+        # Convert to pure 1-bit
+        bw_img = alpha_composite.convert("1")
+        bw_img.save(bmp_path)
+        
+        os.remove(temp_png)
+        return bmp_path
+    except Exception as e:
+        print(f"[-] Icon processing error: {e}")
+        return None
+
+def get_weather(api_key, city="Bhubaneswar,IN"):
+    """Fetches detailed weather, downloads icons, and caches for 30 mins."""
     if not api_key:
         return {"error": "No API Key configured"}
 
@@ -72,17 +111,24 @@ def get_weather(api_key, city="Khordha,IN"):
 
     try:
         url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-        print(f"DEBUG: OPWM {url=}")
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        print(f"DEBUG: OPWM {data=}")
+        
+        # Process the icon
+        icon_id = data["weather"][0]["icon"]
+        icon_path = download_and_convert_icon(icon_id)
         
         parsed_data = {
+            "city": data.get("name", city),
             "temp": round(data["main"]["temp"]),
+            "temp_max": round(data["main"]["temp_max"]),
+            "temp_min": round(data["main"]["temp_min"]),
             "feels_like": round(data["main"]["feels_like"]),
             "description": data["weather"][0]["description"].title(),
-            "humidity": data["main"]["humidity"]
+            "humidity": data["main"]["humidity"],
+            "wind_speed": round(data["wind"]["speed"]),
+            "icon_path": icon_path
         }
         save_to_cache('weather.json', parsed_data)
         return parsed_data
