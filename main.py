@@ -521,7 +521,7 @@ if __name__ == '__main__':
     app = create_app(state, trigger_full_refresh, trigger_partial_refresh)
     
     # Run Flask in a daemonized background thread so it doesn't block the hardware loop
-    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False))
+    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False))
     web_thread.daemon = True
     web_thread.start()
     

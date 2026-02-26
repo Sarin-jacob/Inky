@@ -68,7 +68,7 @@ def register_mdns():
         "_http._tcp.local.",
         "inky._http._tcp.local.",
         addresses=[socket.inet_aton(local_ip)],
-        port=5000,
+        port=80,
         properties=desc,
         server="inky.local.",
     )

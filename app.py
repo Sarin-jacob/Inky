@@ -272,6 +272,21 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         if not bbox:
             return jsonify({"status": "success", "update_type": "none", "message": "Images are identical."})
             
+        # --- ENFORCE E-INK BYTE ALIGNMENT (Multiples of 8) ---
+        x1, y1, x2, y2 = bbox
+        
+        # Floor x1 to the nearest 8
+        x1_aligned = (x1 // 8) * 8
+        # Ceil x2 to the nearest 8
+        x2_aligned = ((x2 + 7) // 8) * 8
+        
+        # Clamp to screen bounds to prevent out-of-bounds crashes
+        x1_aligned = max(0, x1_aligned)
+        x2_aligned = min(800, x2_aligned)
+        
+        aligned_bbox = (x1_aligned, y1, x2_aligned, y2)
+        # -----------------------------------------------------
+
         # Move new image to current
         os.replace(new_image_path, old_image_path)
         
@@ -280,13 +295,14 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
             trigger_full_refresh()
             return jsonify({"status": "success", "update_type": "full_refresh_forced"})
             
-        # Tell the main thread to execute a partial update with these exact coordinates!
-        trigger_partial_refresh(bbox)
+        # Execute partial update with the safely aligned coordinates
+        trigger_partial_refresh(aligned_bbox)
         
         return jsonify({
             "status": "success", 
             "update_type": "partial", 
-            "bounding_box": bbox
+            "bounding_box": aligned_bbox,
+            "original_bbox": bbox
         })
 
     return app
