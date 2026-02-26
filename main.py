@@ -13,6 +13,7 @@ from utils import load_state, save_state, register_mdns
 from display import push_full_update, push_partial_update, get_sensor_data, create_blank_layers, load_fonts
 from app import create_app
 from api_handler import get_world_clocks, get_weather, get_todoist_tasks, get_picture_of_the_day, get_calendar_events
+from quote_manager import get_next_quote
 
 # --- CONFIGURATION & STATE ---
 os.environ['TZ'] = 'Asia/Kolkata'
@@ -225,23 +226,35 @@ def render_current_state(time_str, sensor_data):
                     # Fallback if you haven't downloaded the thermo.png/drop.png files yet
                     draw_black.text((450, 405), f"T: {sensor_data['temp']}°C   H: {sensor_data['hum']}%", font=font_med, fill=0)
             
-        elif mode == 2: # World Clock / Weather
-            pass
-            # clocks = get_world_clocks()
-            # weather_key = state.get('openweather_api_key', '')
-            # weather = get_weather(weather_key)
+        elif mode == 2: # Daily Quotes
+            draw_red.text((40, 40), "QUOTE OF THE MOMENT", font=font_small, fill=0)
             
-            # draw_black.text((40, 40), f"Local: {clocks['local']}", font=font_med, fill=0)
-            # draw_red.text((40, 100), f"CEST: {clocks['cest']}", font=font_small, fill=0)
+            # Pass our state and our draw object (so the engine can measure pixel text width)
+            quote_data = get_next_quote(state, draw_black)
             
-            # draw_black.text((40, 180), "CURRENT WEATHER", font=font_small, fill=0)
-            # if "error" in weather:
-            #     draw_red.text((40, 220), weather["error"], font=font_med, fill=0)
-            # else:
-            #     draw_black.text((40, 220), f"{weather['temp']}°C - {weather['description']}", font=font_med, fill=0)
-            #     draw_black.text((40, 270), f"Feels like {weather['feels_like']}°C | Hum: {weather['humidity']}%", font=font_small, fill=0)
+            if "error" in quote_data:
+                draw_red.text((40, 200), "QUOTE ENGINE ERROR", font=font_large, fill=0)
+                draw_black.text((40, 280), quote_data["error"], font=font_med, fill=0)
+            else:
+                # Unpack the layout engine results
+                lines = quote_data["lines"]
+                author = quote_data["author"]
+                font_q = quote_data["font_quote"]
+                font_a = quote_data["font_author"]
+                lh = quote_data["line_height"]
                 
-            # draw_black.text((40, 400), sensor_data, font=font_med, fill=0)
+                # Draw the quote text centered vertically in our bounding box
+                y_offset = 120 
+                for line in lines:
+                    draw_black.text((40, y_offset), line, font=font_q, fill=0)
+                    y_offset += lh
+                    
+                # Draw the author slightly below the quote in Red
+                y_offset += 20
+                draw_red.text((40, y_offset), f"— {author}", font=font_a, fill=0)
+            
+            # Keep a small clock at the very bottom so you don't lose track of time!
+            draw_black.text((40, 440), f"Local: {time_str}", font=font_small, fill=0)
             
         elif mode == 3: # Custom API Push (B&W Only)
             api_img_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
@@ -421,12 +434,17 @@ def hardware_loop():
         is_slideshow_active = (state.get('active_page') == 3 and state.get('active_mode') == 2)
         slide_interval = state.get('slideshow_interval', 3600) # Default 1 hour
         
+        is_quotes_active = (state.get('active_page') == 1 and state.get('active_mode') == 2)
+
         if is_slideshow_active and time_since_slide >= slide_interval:
             print("[*] Auto-advancing slideshow...")
             state['slideshow_index'] = state.get('slideshow_index', 0) + 1
             save_state(state)
             flag_full_refresh = True
             last_slide_change_time = time.time()
+
+        if is_quotes_active and time_since_slide >= slide_interval:
+            flag_full_refresh=True
         
         # 1. API Push Partial Update (Page 1, Mode 3 B&W Diff)
         if flag_partial_refresh and partial_bbox:

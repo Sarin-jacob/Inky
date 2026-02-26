@@ -13,6 +13,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 SLIDESHOW_DIR = os.path.join(UPLOAD_DIR, 'slideshow')
 os.makedirs(SLIDESHOW_DIR, exist_ok=True)
 
+QUOTES_DIR = os.path.join(UPLOAD_DIR, 'quotes')
+os.makedirs(QUOTES_DIR, exist_ok=True)
+
 def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
     """
     App factory pattern. 
@@ -182,6 +185,61 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         state_ref['slideshow_interval'] = interval
         save_state(state_ref)
         return redirect(url_for('index'))
+
+    # --- QUOTES ENDPOINTS ---
+    @app.route('/api/quotes', methods=['GET'])
+    def list_quotes():
+        """Lists all uploaded quote CSVs."""
+        import glob
+        csvs = [os.path.basename(f) for f in glob.glob(os.path.join(QUOTES_DIR, '*.csv'))]
+        return jsonify({
+            "active_csv": state_ref.get('active_quote_csv', ''),
+            "available_csvs": sorted(csvs)
+        })
+
+    @app.route('/api/quotes/upload', methods=['POST'])
+    def upload_quote_csv():
+        if 'csv_file' not in request.files:
+            return redirect(url_for('index'))
+            
+        file = request.files['csv_file']
+        if file.filename != '' and file.filename.endswith('.csv'):
+            # Secure the filename to prevent path traversal
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(QUOTES_DIR, filename))
+            
+            # If no active CSV is set, make this one active automatically
+            if not state_ref.get('active_quote_csv'):
+                state_ref['active_quote_csv'] = filename
+                
+            save_state(state_ref)
+        return redirect(url_for('index'))
+
+    @app.route('/api/quotes/active', methods=['POST'])
+    def set_active_csv():
+        filename = request.form.get('filename')
+        if filename:
+            state_ref['active_quote_csv'] = filename
+            state_ref['shown_quotes'] = [] # Reset the shown list when switching files!
+            save_state(state_ref)
+            
+            # If we are currently looking at the quotes page, force a refresh
+            if state_ref.get('active_page') == 1 and state_ref.get('active_mode') == 2:
+                trigger_full_refresh()
+                
+        return redirect(url_for('index'))
+        
+    @app.route('/api/quotes/delete/<filename>', methods=['POST'])
+    def delete_quote_csv(filename):
+        safe_name = secure_filename(filename)
+        path = os.path.join(QUOTES_DIR, safe_name)
+        if os.path.exists(path):
+            os.remove(path)
+            # If we deleted the active one, clear the state
+            if state_ref.get('active_quote_csv') == safe_name:
+                state_ref['active_quote_csv'] = ""
+            save_state(state_ref)
+        return jsonify({"status": "success", "deleted": safe_name})
 
     @app.route('/api/push_image', methods=['POST'])
     def api_push_image():
