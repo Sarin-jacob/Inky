@@ -423,7 +423,7 @@ def hardware_loop():
     last_drawn_time = ""
     last_full_refresh_time = time.time()
     last_slide_change_time= time.time()
-    font_large, font_med, _ = load_fonts()
+    font_large, font_med, font_small = load_fonts()
     
     while True:
         now_str = datetime.now().strftime("%I:%M %p")
@@ -445,6 +445,15 @@ def hardware_loop():
 
         if is_quotes_active and time_since_slide >= slide_interval:
             flag_full_refresh=True
+        
+        # Local time update on Quotes
+        if is_quotes_active and now_str != last_drawn_time and not flag_full_refresh:
+            img_black_temp, _ = create_blank_layers()
+            draw_temp = ImageDraw.Draw(img_black_temp)
+            draw_temp.text((40, 440), f"Local: {now_str}", font=font_small, fill=0)
+            lbbox = (40, 440, 220, 510) 
+            push_partial_update(img_black_temp, *lbbox)
+            last_drawn_time = now_str
         
         # 1. API Push Partial Update (Page 1, Mode 3 B&W Diff)
         if flag_partial_refresh and partial_bbox:
@@ -483,7 +492,7 @@ def hardware_loop():
             
             # The new unified clock bounding box (X1: 40, Y1: 60, X2: 400, Y2: 150)
             lbbox = (40, 60, 400, 150)
-            tbbox = (40, 260, 400, 400)
+            tbbox = (80, 260, 500, 400)
             
             # Wipe the box clean (fill with 255/White) so the old time is erased
             draw_temp.rectangle(lbbox, fill=255) 
