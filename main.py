@@ -26,6 +26,14 @@ POTD_DIR= f"{UPLOAD_DIR}/potd"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(POTD_DIR, exist_ok=True)
 
+# Remove last api push image
+api_current_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
+if os.path.exists(api_current_path):
+    try:
+        os.remove(api_current_path)
+        print("[*] Cleared old API push image on startup.")
+    except Exception as e:
+        print(f"[-] Could not clear old API image: {e}")
 
 # Shared state and thread-safe flags
 state = load_state()
