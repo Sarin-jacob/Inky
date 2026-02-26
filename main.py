@@ -199,7 +199,7 @@ def render_current_state(time_str, sensor_data):
             elif "error" in sensor_data:
                 draw_red.text((450, 410), "Sensor Read Error", font=font_med, fill=0)
             else:
-                draw_black.text((450, 380), "INDOOR SENSOR", font=font_small, fill=0)
+                draw_black.text((450, 375), "INDOOR SENSOR:", font=font_small, fill=0)
                 # Load your custom icon images
                 try:
                     icon_thermo = Image.open("icons/thermo.png").convert("1").resize((32, 32))
@@ -210,8 +210,8 @@ def render_current_state(time_str, sensor_data):
                     draw_black.text((485, 405), f"{sensor_data['temp']}°C", font=font_med, fill=0)
                     
                     # Draw Droplet Icon and Humidity text
-                    img_black.paste(icon_drop, (580, 410)) 
-                    draw_black.text((615, 405), f"{sensor_data['hum']}%", font=font_med, fill=0)
+                    img_black.paste(icon_drop, (600, 410)) 
+                    draw_black.text((635, 405), f"{sensor_data['hum']}%", font=font_med, fill=0)
                 except Exception:
                     # Fallback if you haven't downloaded the thermo.png/drop.png files yet
                     draw_black.text((450, 405), f"T: {sensor_data['temp']}°C   H: {sensor_data['hum']}%", font=font_med, fill=0)

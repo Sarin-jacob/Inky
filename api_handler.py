@@ -63,14 +63,13 @@ def get_world_clocks():
 
 # --- WEATHER API (OpenWeatherMap) ---
 def download_and_convert_icon(icon_id):
-    """Downloads an OpenWeather icon and splits it into sharp Black and Red layers."""
+    """Downloads an OpenWeather icon and converts it using the proven 3-color palette logic."""
     icon_dir = 'icons'
     os.makedirs(icon_dir, exist_ok=True)
     
     path_b = os.path.join(icon_dir, f"{icon_id}_black.bmp")
     path_r = os.path.join(icon_dir, f"{icon_id}_red.bmp")
     
-    # If we already generated both layers, return them
     if os.path.exists(path_b) and os.path.exists(path_r):
         return {"black": path_b, "red": path_r}
         
@@ -83,36 +82,35 @@ def download_and_convert_icon(icon_id):
         with open(temp_png, 'wb') as f:
             f.write(response.content)
             
-        img = Image.open(temp_png).convert("RGBA")
+        # 1. Open the image and composite over white to handle transparency safely
+        img_raw = Image.open(temp_png).convert("RGBA")
+        bg = Image.new("RGBA", img_raw.size, (255, 255, 255, 255))
+        img = Image.alpha_composite(bg, img_raw).convert("RGB")
         
-        # Create our two blank 1-bit layers (White background = 255)
+        # 2. THE PROCESS_UPLOAD PALETTE LOGIC
+        palettedata = [255, 255, 255,  0, 0, 0,  255, 0, 0] # White, Black, Red
+        palettedata.extend([0] * (768 - len(palettedata)))
+        palimage = Image.new('P', (1, 1))
+        palimage.putpalette(palettedata)
+        img_converted = img.quantize(palette=palimage)
+        
         img_black = Image.new('1', img.size, 255)
         img_red = Image.new('1', img.size, 255)
         
         p_black = img_black.load()
         p_red = img_red.load()
+        p_old = img_converted.load()
         
-        # Scan through the image pixel by pixel
         for y in range(img.size[1]):
             for x in range(img.size[0]):
-                r, g, b, a = img.getpixel((x, y))
+                if p_old[x, y] == 1: p_black[x,y] = 0   # Draw to Black Layer
+                elif p_old[x, y] == 2: p_red[x,y] = 0   # Draw to Red Layer
                 
-                # Only process pixels that are mostly opaque
-                if a > 128: 
-                    # 1. Warm colors (Yellow sun, Orange lightning) -> Red Layer
-                    # High red/green, lower blue means yellow/orange
-                    if r > 150 and g > 120 and b < 100:
-                        p_red[x, y] = 0
-                        
-                    # 2. Dark colors (Cloud outlines, dark blue rain, night moon) -> Black Layer
-                    elif r < 180 and g < 180:
-                        p_black[x, y] = 0
-                        
-        # Save both layers
+        # 3. Save both layers with their unique icon IDs
         img_black.save(path_b)
         img_red.save(path_r)
-        os.remove(temp_png)
         
+        os.remove(temp_png)
         return {"black": path_b, "red": path_r}
         
     except Exception as e:
