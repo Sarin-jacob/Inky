@@ -483,7 +483,7 @@ def hardware_loop():
             
             # The new unified clock bounding box (X1: 40, Y1: 60, X2: 400, Y2: 150)
             lbbox = (40, 60, 400, 150)
-            tbbox = (80, 260, 500, 400)
+            tbbox = (80, 260, 440, 460)
             
             # Wipe the box clean (fill with 255/White) so the old time is erased
             draw_temp.rectangle(lbbox, fill=255) 
@@ -499,7 +499,7 @@ def hardware_loop():
             # Push ONLY the specific box to the screen using our absolute coordinates
             push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
-            
+
         # Local time update on Quotes
         elif is_quotes_active and now_str != last_drawn_time and not flag_full_refresh:
             img_black_temp, _ = create_blank_layers()

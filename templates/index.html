@@ -65,7 +65,7 @@
                     <button type="submit" name="mode" value="1" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 1 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">Mode 1</span>
                         <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}Minimalist Clock
+                            {% if state.active_page == 1 %}Clock & Weather
                             {% elif state.active_page == 2 %}Todoist Task List
                             {% else %}Single Photo Upload{% endif %}
                         </span>
@@ -74,7 +74,7 @@
                     <button type="submit" name="mode" value="2" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">Mode 2</span>
                         <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}Daily Quotes & World Clocks
+                            {% if state.active_page == 1 %}Quotes
                             {% elif state.active_page == 2 %}Calendar Agenda
                             {% else %}Local Slideshow{% endif %}
                         </span>
