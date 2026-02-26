@@ -483,7 +483,7 @@ def hardware_loop():
             
             # The new unified clock bounding box (X1: 40, Y1: 60, X2: 400, Y2: 150)
             lbbox = (40, 60, 400, 150)
-            tbbox = (80, 260, 440, 460)
+            tbbox = (80, 260, 420, 460)
             
             # Wipe the box clean (fill with 255/White) so the old time is erased
             draw_temp.rectangle(lbbox, fill=255) 
@@ -505,7 +505,7 @@ def hardware_loop():
             img_black_temp, _ = create_blank_layers()
             draw_temp = ImageDraw.Draw(img_black_temp)
             draw_temp.text((40, 440), f"Local: {now_str}", font=font_small, fill=0)
-            lbbox = (40, 440, 220, 510) 
+            lbbox = (40, 440, 200, 510) 
             push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
         
