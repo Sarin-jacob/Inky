@@ -16,7 +16,7 @@ try {
     console.log('Compiling and minifying Tailwind CSS...');
     // This assumes tailwindcss is installed in your project. 
     // If using it globally, you can remove 'npx '
-    execSync(`npx tailwindcss -i "${sourceCssPath}" -o "${tempCssPath}" --minify`, { stdio: 'inherit' });
+    execSync(`npx @tailwindcss/cli -i "${sourceCssPath}" -o "${tempCssPath}"  --minify`, { stdio: 'inherit' });
 
     // 2. Read the source HTML and the newly generated CSS
     console.log('Reading files...');
@@ -26,10 +26,10 @@ try {
     // 3. Inject the CSS into the HTML
     console.log('Injecting CSS directly into HTML...');
     const styleTag = `<style>\n${cssContent}\n</style>`;
-    
-    // Look for our specific injection marker, otherwise inject right before </head>
-    if (htmlContent.includes('')) {
-        htmlContent = htmlContent.replace('', styleTag);
+    const tailwindCdnTag = `<script src="https://cdn.tailwindcss.com"></script>`;
+
+    if (htmlContent.includes(tailwindCdnTag)) {
+        htmlContent = htmlContent.replace(tailwindCdnTag, styleTag);
     } else if (htmlContent.includes('</head>')) {
         htmlContent = htmlContent.replace('</head>', `${styleTag}\n</head>`);
     } else {

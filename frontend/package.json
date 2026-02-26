@@ -4,7 +4,8 @@
   "scripts": {
     "build": "node build.js"
   },
-  "devDependencies": {
-    "tailwindcss": "^3.4.0"
+  "dependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "tailwindcss": "^4.2.1"
   }
 }
