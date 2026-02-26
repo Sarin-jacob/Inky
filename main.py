@@ -504,9 +504,9 @@ def hardware_loop():
         elif is_quotes_active and now_str != last_drawn_time and not flag_full_refresh:
             img_black_temp, _ = create_blank_layers()
             draw_temp = ImageDraw.Draw(img_black_temp)
+            lbbox = (536, 440, 800, 480) 
             draw_temp.rectangle(lbbox, fill=255)
             draw_temp.text((536, 440), f"Local: {now_str}", font=font_small, fill=0)
-            lbbox = (536, 440, 800, 480) 
             push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
         
