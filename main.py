@@ -226,19 +226,20 @@ def render_current_state(time_str, sensor_data):
                     draw_black.text((450, 405), f"T: {sensor_data['temp']}°C   H: {sensor_data['hum']}%", font=font_med, fill=0)
             
         elif mode == 2: # World Clock / Weather
-            clocks = get_world_clocks()
-            weather_key = state.get('openweather_api_key', '')
-            weather = get_weather(weather_key)
+            pass
+            # clocks = get_world_clocks()
+            # weather_key = state.get('openweather_api_key', '')
+            # weather = get_weather(weather_key)
             
-            draw_black.text((40, 40), f"Local: {clocks['local']}", font=font_med, fill=0)
-            draw_red.text((40, 100), f"CEST: {clocks['cest']}", font=font_small, fill=0)
+            # draw_black.text((40, 40), f"Local: {clocks['local']}", font=font_med, fill=0)
+            # draw_red.text((40, 100), f"CEST: {clocks['cest']}", font=font_small, fill=0)
             
-            draw_black.text((40, 180), "CURRENT WEATHER", font=font_small, fill=0)
-            if "error" in weather:
-                draw_red.text((40, 220), weather["error"], font=font_med, fill=0)
-            else:
-                draw_black.text((40, 220), f"{weather['temp']}°C - {weather['description']}", font=font_med, fill=0)
-                draw_black.text((40, 270), f"Feels like {weather['feels_like']}°C | Hum: {weather['humidity']}%", font=font_small, fill=0)
+            # draw_black.text((40, 180), "CURRENT WEATHER", font=font_small, fill=0)
+            # if "error" in weather:
+            #     draw_red.text((40, 220), weather["error"], font=font_med, fill=0)
+            # else:
+            #     draw_black.text((40, 220), f"{weather['temp']}°C - {weather['description']}", font=font_med, fill=0)
+            #     draw_black.text((40, 270), f"Feels like {weather['feels_like']}°C | Hum: {weather['humidity']}%", font=font_small, fill=0)
                 
             # draw_black.text((40, 400), sensor_data, font=font_med, fill=0)
             
