@@ -1,271 +1,399 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inky Dashboard Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Smooth transitions for theme switching */
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased p-4 md:p-8">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans antialiased p-4 md:p-8 min-h-screen">
 
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-5xl mx-auto space-y-6">
         
-        <header class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">Inky Control Panel</h1>
-                    <p class="text-sm text-slate-500">Manage your smart e-ink dashboard.</p>
+        <header class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-colors">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
+                    <i data-lucide="monitor-smartphone" class="w-8 h-8"></i>
                 </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Inky Control Panel</h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Manage your smart e-ink dashboard.</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                 <div class="text-right">
-                    <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Current State</span>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    <span class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Current State</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                         Page {{ state.active_page }} • Mode {{ state.active_mode }}
                     </span>
                 </div>
+                <button id="theme-toggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Toggle Dark Mode">
+                    <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+                    <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+                </button>
             </div>
-
-            {% if state.wifi_msg %}
-            <div class="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
-                {{ state.wifi_msg }}
-            </div>
-            {% endif %}
-            
-            {% if state.is_rebooting %}
-            <div class="mt-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm animate-pulse">
-                System is rebooting. Please wait 60 seconds before refreshing this page.
-            </div>
-            {% endif %}
         </header>
 
+        {% if state.wifi_msg %}
+        <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 rounded-xl text-sm flex items-center gap-3">
+            <i data-lucide="wifi" class="w-5 h-5 flex-shrink-0"></i>
+            {{ state.wifi_msg }}
+        </div>
+        {% endif %}
+        
+        {% if state.is_rebooting %}
+        <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-800 dark:text-red-300 rounded-xl text-sm flex items-center gap-3 animate-pulse">
+            <i data-lucide="power" class="w-5 h-5 flex-shrink-0"></i>
+            System is rebooting. Please wait 60 seconds before refreshing this page.
+        </div>
+        {% endif %}
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                <h2 class="text-lg font-semibold mb-4">Display Page</h2>
+            <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 transition-colors">
+                <div class="flex items-center gap-2 mb-4">
+                    <i data-lucide="file-text" class="w-5 h-5 text-slate-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Display Page</h2>
+                </div>
                 <form method="POST" action="/" class="space-y-3">
                     <input type="hidden" name="action" value="set_page">
-                    <button type="submit" name="page" value="1" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 1 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
-                        <span class="font-medium block">1. The Daily Hub</span>
-                        <span class="text-xs text-slate-500">Time, Environment & Quotes</span>
+                    
+                    <button type="submit" name="page" value="1" class="w-full flex items-center gap-4 text-left px-4 py-3 rounded-xl border {% if state.active_page == 1 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-500 dark:ring-blue-500{% else %}border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/20{% endif %} transition-all">
+                        <div class="p-2 rounded-lg {% if state.active_page == 1 %}bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %}">
+                            <i data-lucide="sun-dim" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="font-medium block text-slate-900 dark:text-slate-100">1. The Daily Hub</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Time, Environment & Quotes</span>
+                        </div>
                     </button>
-                    <button type="submit" name="page" value="2" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 2 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
-                        <span class="font-medium block">2. Productivity</span>
-                        <span class="text-xs text-slate-500">Tasks, Calendar & Notes</span>
+
+                    <button type="submit" name="page" value="2" class="w-full flex items-center gap-4 text-left px-4 py-3 rounded-xl border {% if state.active_page == 2 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-500 dark:ring-blue-500{% else %}border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/20{% endif %} transition-all">
+                        <div class="p-2 rounded-lg {% if state.active_page == 2 %}bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %}">
+                            <i data-lucide="check-square" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="font-medium block text-slate-900 dark:text-slate-100">2. Productivity</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Tasks, Calendar & Notes</span>
+                        </div>
                     </button>
-                    <button type="submit" name="page" value="3" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 3 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
-                        <span class="font-medium block">3. Art Gallery</span>
-                        <span class="text-xs text-slate-500">Photos & API Images</span>
+
+                    <button type="submit" name="page" value="3" class="w-full flex items-center gap-4 text-left px-4 py-3 rounded-xl border {% if state.active_page == 3 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-500 dark:ring-blue-500{% else %}border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/20{% endif %} transition-all">
+                        <div class="p-2 rounded-lg {% if state.active_page == 3 %}bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %}">
+                            <i data-lucide="image" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="font-medium block text-slate-900 dark:text-slate-100">3. Art Gallery</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Photos & API Images</span>
+                        </div>
                     </button>
                 </form>
             </section>
 
-            <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                <h2 class="text-lg font-semibold mb-4">Page Mode</h2>
+            <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 transition-colors">
+                <div class="flex items-center gap-2 mb-4">
+                    <i data-lucide="layers" class="w-5 h-5 text-slate-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Page Mode</h2>
+                </div>
                 <form method="POST" action="/" class="space-y-3">
                     <input type="hidden" name="action" value="set_mode">
                     
-                    <button type="submit" name="mode" value="1" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 1 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
-                        <span class="font-medium block">Mode 1</span>
-                        <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}Clock & Weather
-                            {% elif state.active_page == 2 %}Todoist Task List
-                            {% else %}Single Photo Upload{% endif %}
-                        </span>
+                    <button type="submit" name="mode" value="1" class="w-full flex items-center justify-between px-4 py-3 rounded-xl border {% if state.active_mode == 1 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-500 dark:ring-emerald-500{% else %}border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/20{% endif %} transition-all">
+                        <div class="text-left">
+                            <span class="font-medium block text-slate-900 dark:text-slate-100">Mode 1</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                                {% if state.active_page == 1 %}Clock & Weather
+                                {% elif state.active_page == 2 %}Todoist Task List
+                                {% else %}Single Photo Upload{% endif %}
+                            </span>
+                        </div>
+                        <i data-lucide="layout-template" class="w-5 h-5 {% if state.active_mode == 1 %}text-emerald-500 dark:text-emerald-400{% else %}text-slate-400{% endif %}"></i>
                     </button>
                     
-                    <button type="submit" name="mode" value="2" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
-                        <span class="font-medium block">Mode 2</span>
-                        <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}Quotes
-                            {% elif state.active_page == 2 %}Calendar Agenda
-                            {% else %}Local Slideshow{% endif %}
-                        </span>
+                    <button type="submit" name="mode" value="2" class="w-full flex items-center justify-between px-4 py-3 rounded-xl border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-500 dark:ring-emerald-500{% else %}border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/20{% endif %} transition-all">
+                        <div class="text-left">
+                            <span class="font-medium block text-slate-900 dark:text-slate-100">Mode 2</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                                {% if state.active_page == 1 %}Quotes
+                                {% elif state.active_page == 2 %}Calendar Agenda
+                                {% else %}Local Slideshow{% endif %}
+                            </span>
+                        </div>
+                        <i data-lucide="layout-list" class="w-5 h-5 {% if state.active_mode == 2 %}text-emerald-500 dark:text-emerald-400{% else %}text-slate-400{% endif %}"></i>
                     </button>
                     
-                    <button type="submit" name="mode" value="3" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 3 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
-                        <span class="font-medium block">Mode 3</span>
-                        <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}Custom API Push (B&W)
-                            {% elif state.active_page == 2 %}Scratchpad Notes
-                            {% else %}Picture of the Day{% endif %}
-                        </span>
+                    <button type="submit" name="mode" value="3" class="w-full flex items-center justify-between px-4 py-3 rounded-xl border {% if state.active_mode == 3 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-500 dark:ring-emerald-500{% else %}border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/20{% endif %} transition-all">
+                        <div class="text-left">
+                            <span class="font-medium block text-slate-900 dark:text-slate-100">Mode 3</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                                {% if state.active_page == 1 %}Custom API Push (B&W)
+                                {% elif state.active_page == 2 %}Scratchpad Notes
+                                {% else %}Picture of the Day{% endif %}
+                            </span>
+                        </div>
+                        <i data-lucide="sliders-horizontal" class="w-5 h-5 {% if state.active_mode == 3 %}text-emerald-500 dark:text-emerald-400{% else %}text-slate-400{% endif %}"></i>
                     </button>
                 </form>
             </section>
         </div>
 
-        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <h2 class="text-lg font-semibold mb-2">Slideshow Management</h2>
-            <p class="text-sm text-slate-500 mb-4">Upload and manage pre-processed images for the Local Slideshow (Page 3, Mode 2).</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <form method="POST" action="/api/slides/upload" enctype="multipart/form-data" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <label class="block text-xs font-medium text-slate-700 mb-2">Add New Slide</label>
-                        <input type="file" name="image" accept="image/jpeg, image/png" required
-                               class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer mb-3"/>
-                        <button type="submit" class="w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
-                            Process & Upload Slide
-                        </button>
-                    </form>
-                    <form method="POST" action="/api/slides/interval" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <label class="block text-xs font-medium text-slate-700 mb-2">Time Between Slides (Seconds)</label>
-                        <div class="flex gap-2">
-                            <input type="number" name="interval" id="slide-interval" value="3600" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500">
-                            <button type="submit" class="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 transition">Save</button>
-                        </div>
-                    </form>
+        <div class="space-y-6">
+            <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 transition-colors">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="gallery-horizontal-end" class="w-5 h-5 text-slate-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Slideshow Management</h2>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col h-full">
-                    <label class="block text-xs font-medium text-slate-700 mb-2">Saved Slides</label>
-                    <div id="slide-list" class="space-y-2 overflow-y-auto max-h-48 flex-grow">
-                        <p class="text-xs text-slate-400 italic">Loading slides...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <h2 class="text-lg font-semibold mb-2">Quotes Management</h2>
-            <p class="text-sm text-slate-500 mb-4">Upload CSV files containing your quotes (Page 1, Mode 2). Format must include headers: <code>id,person,quote</code>.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <form method="POST" action="/api/quotes/upload" enctype="multipart/form-data" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <label class="block text-xs font-medium text-slate-700 mb-2">Upload Quotes CSV</label>
-                        <input type="file" name="csv_file" accept=".csv" required
-                               class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer mb-3"/>
-                        <button type="submit" class="w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
-                            Upload CSV
-                        </button>
-                    </form>
-                </div>
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col h-full">
-                    <label class="block text-xs font-medium text-slate-700 mb-2">Available CSV Files</label>
-                    <div id="quote-list" class="space-y-2 overflow-y-auto max-h-48 flex-grow">
-                        <p class="text-xs text-slate-400 italic">Loading quotes...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <h2 class="text-lg font-semibold mb-4 text-slate-900">Integrations & Settings</h2>
-            <form method="POST" action="/" class="space-y-6">
-                <input type="hidden" name="action" value="set_config">
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Upload and manage pre-processed images for the Local Slideshow (Page 3, Mode 2).</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Productivity</h3>
+                        <form method="POST" action="/api/slides/upload" enctype="multipart/form-data" class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Add New Slide</label>
+                            <input type="file" name="image" accept="image/jpeg, image/png" required
+                                   class="block w-full text-sm text-slate-500 dark:text-slate-400 
+                                          file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 
+                                          file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 
+                                          hover:file:bg-blue-200 dark:file:bg-blue-900/30 dark:file:text-blue-400 
+                                          dark:hover:file:bg-blue-900/50 cursor-pointer mb-4 transition-colors"/>
+                            <button type="submit" class="w-full flex justify-center items-center gap-2 bg-slate-900 dark:bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-blue-700 transition shadow-sm">
+                                <i data-lucide="upload" class="w-4 h-4"></i> Process & Upload
+                            </button>
+                        </form>
+                        
+                        <form method="POST" action="/api/slides/interval" class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Time Between Slides (Sec)</label>
+                            <div class="flex gap-2">
+                                <input type="number" name="interval" id="slide-interval" value="3600" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                <button type="submit" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col h-full transition-colors">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Saved Slides</label>
+                        <div id="slide-list" class="space-y-3 overflow-y-auto max-h-60 flex-grow pr-2 custom-scrollbar">
+                            <p class="text-xs text-slate-400 dark:text-slate-500 italic flex items-center gap-2">
+                                <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Loading...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 transition-colors">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="quote" class="w-5 h-5 text-slate-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Quotes Management</h2>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Upload CSV files containing your quotes (Page 1, Mode 2). Format must include headers: <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-pink-600 dark:text-pink-400">id,person,quote</code>.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <form method="POST" action="/api/quotes/upload" enctype="multipart/form-data" class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Upload Quotes CSV</label>
+                            <input type="file" name="csv_file" accept=".csv" required
+                                   class="block w-full text-sm text-slate-500 dark:text-slate-400 
+                                          file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 
+                                          file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 
+                                          hover:file:bg-blue-200 dark:file:bg-blue-900/30 dark:file:text-blue-400 
+                                          dark:hover:file:bg-blue-900/50 cursor-pointer mb-4 transition-colors"/>
+                            <button type="submit" class="w-full flex justify-center items-center gap-2 bg-slate-900 dark:bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-blue-700 transition shadow-sm">
+                                <i data-lucide="file-up" class="w-4 h-4"></i> Upload CSV
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col h-full transition-colors">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Available CSV Files</label>
+                        <div id="quote-list" class="space-y-3 overflow-y-auto max-h-48 flex-grow pr-2 custom-scrollbar">
+                            <p class="text-xs text-slate-400 dark:text-slate-500 italic flex items-center gap-2">
+                                <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Loading...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 transition-colors">
+            <div class="flex items-center gap-2 mb-6">
+                <i data-lucide="settings" class="w-5 h-5 text-slate-400"></i>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Integrations & Settings</h2>
+            </div>
+            
+            <form method="POST" action="/" class="space-y-8">
+                <input type="hidden" name="action" value="set_config">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-5">
+                        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <i data-lucide="briefcase" class="w-4 h-4 text-blue-500"></i>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Productivity</h3>
+                        </div>
+                        
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Todoist API Token</label>
-                            <input type="password" name="todoist_api_key" value="" placeholder="{% if state.todoist_api_key %}(unchanged){% else %}Bearer token...{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Todoist API Token</label>
+                            <input type="password" name="todoist_api_key" value="" placeholder="{% if state.todoist_api_key %}(unchanged){% else %}Bearer token...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Calendar iCal URL (.ics)</label>
-                            <input type="text" name="calendar_ical_url" value="{{ state.calendar_ical_url | default('') }}" placeholder="https://calendar.google.com/..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Calendar iCal URL (.ics)</label>
+                            <input type="text" name="calendar_ical_url" value="{{ state.calendar_ical_url | default('') }}" placeholder="https://calendar.google.com/..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Scratchpad Note</label>
-                            <textarea name="scratchpad_text" rows="3" placeholder="Buy milk, walk dog..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">{{ state.scratchpad_text | default('') }}</textarea>
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Scratchpad Note</label>
+                            <textarea name="scratchpad_text" rows="3" placeholder="Buy milk, walk dog..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">{{ state.scratchpad_text | default('') }}</textarea>
                         </div>
 
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-6">World Clocks</h3>
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
+                            <i data-lucide="globe" class="w-4 h-4 text-indigo-500"></i>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">World Clocks</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-[10px] font-medium text-slate-500 mb-1">Clock 1 Name</label>
-                                <input type="text" name="tz1_name" value="{{ state.tz1_name | default('CEST') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                                <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Clock 1 Name</label>
+                                <input type="text" name="tz1_name" value="{{ state.tz1_name | default('CEST') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-medium text-slate-500 mb-1">Zone (e.g., Europe/Paris)</label>
-                                <input type="text" name="tz1_zone" value="{{ state.tz1_zone | default('Europe/Paris') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
-                            </div>
-                            
-                            <div>
-                                <input type="text" name="tz2_name" value="{{ state.tz2_name | default('NY') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
-                            </div>
-                            <div>
-                                <input type="text" name="tz2_zone" value="{{ state.tz2_zone | default('America/New_York') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                                <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Zone (e.g., Europe/Paris)</label>
+                                <input type="text" name="tz1_zone" value="{{ state.tz1_zone | default('Europe/Paris') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
                             </div>
                             
                             <div>
-                                <input type="text" name="tz3_name" value="{{ state.tz3_name | default('TYO') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                                <input type="text" name="tz2_name" value="{{ state.tz2_name | default('NY') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
                             </div>
                             <div>
-                                <input type="text" name="tz3_zone" value="{{ state.tz3_zone | default('Asia/Tokyo') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                                <input type="text" name="tz2_zone" value="{{ state.tz2_zone | default('America/New_York') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                            </div>
+                            
+                            <div>
+                                <input type="text" name="tz3_name" value="{{ state.tz3_name | default('TYO') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                            </div>
+                            <div>
+                                <input type="text" name="tz3_zone" value="{{ state.tz3_zone | default('Asia/Tokyo') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Environment & Art</h3>
+                    <div class="space-y-5">
+                        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <i data-lucide="cloud-sun" class="w-4 h-4 text-amber-500"></i>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Environment & Art</h3>
+                        </div>
+                        
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">OpenWeather API Key</label>
-                            <input type="password" name="openweather_api_key" value="" placeholder="{% if state.openweather_api_key %}(unchanged){% else %}OpenWeather key...{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">OpenWeather API Key</label>
+                            <input type="password" name="openweather_api_key" value="" placeholder="{% if state.openweather_api_key %}(unchanged){% else %}OpenWeather key...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Picture of the Day Source</label>
-                            <select name="potd_source" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Picture of the Day Source</label>
+                            <select name="potd_source" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none">
                                 <option value="nasa" {% if state.potd_source == 'nasa' %}selected{% endif %}>NASA (Astronomy)</option>
                                 <option value="reddit" {% if state.potd_source == 'reddit' %}selected{% endif %}>Reddit (Earth)</option>
                                 <option value="unsplash" {% if state.potd_source == 'unsplash' %}selected{% endif %}>Unsplash (Nature)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Unsplash API Key</label>
-                            <input type="password" name="unsplash_api_key" value="" placeholder="{% if state.unsplash_api_key %}(unchanged){% else %}Unsplash Client ID...{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Unsplash API Key</label>
+                            <input type="password" name="unsplash_api_key" value="" placeholder="{% if state.unsplash_api_key %}(unchanged){% else %}Unsplash Client ID...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 text-right">
-                    <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
-                        Save Configuration
+                <div class="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                    <button type="submit" class="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Configuration
                     </button>
                 </div>
             </form>
         </section>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-                <h2 class="text-lg font-semibold mb-2">Single Photo Upload</h2>
-                <p class="text-sm text-slate-500 mb-4">Set the static photo for Page 3, Mode 1.</p>
-                <form method="POST" action="/media" enctype="multipart/form-data" class="flex flex-col gap-3">
-                    <input type="file" name="image" accept="image/jpeg, image/png" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
-                    <button type="submit" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm w-full md:w-auto self-start">
-                        Set Static Photo
+            <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 transition-colors">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="image-plus" class="w-5 h-5 text-slate-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Single Photo Upload</h2>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Set the static photo for Page 3, Mode 1.</p>
+                <form method="POST" action="/media" enctype="multipart/form-data" class="flex flex-col gap-4">
+                    <input type="file" name="image" accept="image/jpeg, image/png" required 
+                           class="block w-full text-sm text-slate-500 dark:text-slate-400
+                                  file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 
+                                  file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 
+                                  hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400 
+                                  dark:hover:file:bg-blue-900/50 cursor-pointer transition-colors"/>
+                    <button type="submit" class="flex justify-center items-center gap-2 bg-slate-900 dark:bg-slate-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition shadow-sm w-full md:w-auto self-start">
+                        <i data-lucide="image-up" class="w-4 h-4"></i> Set Static Photo
                     </button>
                 </form>
             </section>
 
-            <section class="bg-slate-900 rounded-xl shadow-sm p-6 border border-slate-800 text-slate-300">
-                <h2 class="text-lg font-semibold text-white mb-2">API Push Endpoint</h2>
-                <p class="text-sm mb-4">POST a B&W image here for instant partial updates (Page 1, Mode 3).</p>
-                <div class="bg-black/50 p-3 rounded text-xs font-mono text-emerald-400 overflow-x-auto break-all">
-                    curl -X POST -F "image=@graph.png" http://Inky.local:5000/api/push_image
+            <section class="bg-slate-900 dark:bg-black rounded-2xl shadow-sm p-6 border border-slate-800 dark:border-slate-800 text-slate-300 relative overflow-hidden transition-colors">
+                <i data-lucide="terminal-square" class="absolute -right-4 -bottom-4 w-32 h-32 text-slate-800/50 pointer-events-none"></i>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i data-lucide="webhook" class="w-5 h-5 text-emerald-400"></i>
+                        <h2 class="text-lg font-semibold text-white">API Push Endpoint</h2>
+                    </div>
+                    <p class="text-sm text-slate-400 mb-5">POST a B&W image here for instant partial updates (Page 1, Mode 3).</p>
+                    <div class="bg-black/60 p-4 rounded-xl text-xs font-mono text-emerald-400 overflow-x-auto border border-slate-700/50">
+                        curl -X POST -F "image=@graph.png" <br/><span id="api-push-url" class="text-blue-400">`http://${window.location.host}/api/push_image`</span>
+                    </div>
                 </div>
             </section>
         </div>
 
-        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 border-t-4 border-t-slate-800">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-slate-900">System</h2>
+        <section class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6 border border-slate-200 dark:border-slate-800 border-t-4 border-t-slate-800 dark:border-t-slate-600 transition-colors">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="cpu" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">System Configuration</h2>
+                </div>
                 <form method="POST" action="/">
                     <input type="hidden" name="action" value="reboot">
-                    <button type="submit" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg border border-red-200 text-sm font-medium hover:bg-red-100 transition">
-                        Reboot System
+                    <button type="submit" class="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-5 py-2.5 rounded-lg border border-red-200 dark:border-red-800/50 text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+                        <i data-lucide="power" class="w-4 h-4"></i> Reboot System
                     </button>
                 </form>
             </div>
             
-            <form method="POST" action="/" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <form method="POST" action="/" class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
                 <input type="hidden" name="action" value="set_wifi">
                 <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">Network SSID</label>
-                    <input type="text" name="ssid" placeholder="MyWiFi" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">Network SSID</label>
+                    <div class="relative">
+                        <i data-lucide="wifi" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                        <input type="text" name="ssid" placeholder="MyWiFi" class="w-full pl-9 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">Password</label>
-                    <input type="password" name="password" value="" placeholder="{% if state.wifi_configured %}(unchanged){% else %}••••••••{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                        <input type="password" name="password" value="" placeholder="{% if state.wifi_configured %}(unchanged){% else %}••••••••{% endif %}" class="w-full pl-9 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    </div>
                 </div>
-                <button type="submit" class="bg-white text-slate-700 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-100 transition shadow-sm">
-                    Connect Wi-Fi
+                <button type="submit" class="flex justify-center items-center gap-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-600 transition shadow-sm w-full">
+                    <i data-lucide="link" class="w-4 h-4"></i> Connect Wi-Fi
                 </button>
             </form>
         </section>
@@ -273,7 +401,31 @@
     </div>
 
     <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Dark Mode Logic
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        
+        // Check for saved theme preference or use OS preference
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.add('dark');
+        } else {
+            htmlElement.classList.remove('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            if (htmlElement.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+            } else {
+                localStorage.theme = 'light';
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('api-push-url').textContent = `http://${window.location.host}/api/push_image`;
             
             // 1. Fetch Slideshow Data
             fetch('/api/slides')
@@ -282,16 +434,16 @@
                     const list = document.getElementById('slide-list');
                     list.innerHTML = '';
                     if(data.slides.length === 0) {
-                        list.innerHTML = '<p class="text-sm text-slate-500 italic mt-2">No slides uploaded yet.</p>';
+                        list.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 italic mt-2">No slides uploaded yet.</p>';
                     } else {
                         data.slides.forEach(slide => {
                             list.innerHTML += `
-                                <div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200 shadow-sm mb-2">
+                                <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
                                     <div class="flex items-center gap-3">
-                                        <img src="/api/slides/thumb/${slide}" class="w-16 h-10 object-cover rounded shadow-sm border border-slate-200 bg-slate-100" alt="Thumb" onerror="this.style.display='none'">
-                                        <span class="text-xs font-mono text-slate-600 truncate">ID: ${slide}</span>
+                                        <img src="/api/slides/thumb/${slide}" class="w-16 h-10 object-cover rounded shadow-sm border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-900" alt="Thumb" onerror="this.style.display='none'">
+                                        <span class="text-xs font-mono text-slate-600 dark:text-slate-300 truncate">ID: ${slide}</span>
                                     </div>
-                                    <button onclick="deleteSlide('${slide}')" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded text-xs font-bold transition">Delete</button>
+                                    <button onclick="deleteSlide('${slide}')" class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-3 py-1.5 rounded-md text-xs font-bold transition-colors">Delete</button>
                                 </div>
                             `;
                         });
@@ -309,25 +461,29 @@
                     const qList = document.getElementById('quote-list');
                     qList.innerHTML = '';
                     if(data.available_csvs.length === 0) {
-                        qList.innerHTML = '<p class="text-sm text-slate-500 italic mt-2">No CSV files uploaded yet.</p>';
+                        qList.innerHTML = '<p class="text-sm text-slate-500 dark:text-slate-400 italic mt-2">No CSV files uploaded yet.</p>';
                     } else {
                         data.available_csvs.forEach(csvFile => {
                             const isActive = (csvFile === data.active_csv);
-                            const activeBadge = isActive ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold ml-2">ACTIVE</span>` : '';
+                            const activeBadge = isActive ? `<span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[10px] px-2 py-0.5 rounded font-bold ml-2">ACTIVE</span>` : '';
+                            const borderClass = isActive ? 'border-emerald-300 dark:border-emerald-700 ring-1 ring-emerald-300 dark:ring-emerald-700' : 'border-slate-200 dark:border-slate-700';
                             
                             qList.innerHTML += `
-                                <div class="flex justify-between items-center bg-white p-2 rounded border ${isActive ? 'border-emerald-300' : 'border-slate-200'} shadow-sm mb-2">
+                                <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border ${borderClass} shadow-sm transition-colors">
                                     <div class="flex items-center truncate">
-                                        <span class="text-sm font-medium text-slate-700 truncate">${csvFile}</span>
+                                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-slate-400 mr-2"></i>
+                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${csvFile}</span>
                                         ${activeBadge}
                                     </div>
-                                    <div class="flex gap-2">
-                                        ${!isActive ? `<button onclick="setActiveCsv('${csvFile}')" class="text-blue-500 hover:bg-blue-50 px-2 py-1 rounded text-xs font-bold transition">Set Active</button>` : ''}
-                                        <button onclick="deleteCsv('${csvFile}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded text-xs font-bold transition">Delete</button>
+                                    <div class="flex gap-1.5">
+                                        ${!isActive ? `<button onclick="setActiveCsv('${csvFile}')" class="text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 px-2 py-1.5 rounded-md text-xs font-bold transition-colors">Set Active</button>` : ''}
+                                        <button onclick="deleteCsv('${csvFile}')" class="text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-2 py-1.5 rounded-md text-xs font-bold transition-colors">Delete</button>
                                     </div>
                                 </div>
                             `;
                         });
+                        // Re-initialize icons for newly added DOM elements
+                        lucide.createIcons();
                     }
                 })
                 .catch(err => console.error('Error fetching quotes:', err));
