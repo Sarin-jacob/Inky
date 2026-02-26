@@ -63,14 +63,16 @@ def get_world_clocks():
 
 # --- WEATHER API (OpenWeatherMap) ---
 def download_and_convert_icon(icon_id):
-    """Downloads an OpenWeather icon and converts it to a stark, crisp 1-bit BMP without dithering."""
+    """Downloads an OpenWeather icon and splits it into sharp Black and Red layers."""
     icon_dir = 'icons'
     os.makedirs(icon_dir, exist_ok=True)
     
-    bmp_path = os.path.join(icon_dir, f"{icon_id}.bmp")
+    path_b = os.path.join(icon_dir, f"{icon_id}_black.bmp")
+    path_r = os.path.join(icon_dir, f"{icon_id}_red.bmp")
     
-    if os.path.exists(bmp_path):
-        return bmp_path
+    # If we already generated both layers, return them
+    if os.path.exists(path_b) and os.path.exists(path_r):
+        return {"black": path_b, "red": path_r}
         
     try:
         url = f"http://openweathermap.org/img/wn/{icon_id}@2x.png"
@@ -81,21 +83,38 @@ def download_and_convert_icon(icon_id):
         with open(temp_png, 'wb') as f:
             f.write(response.content)
             
-        img = Image.open(temp_png)
-        # 1. Create a pure white background to replace the transparent alpha layer
-        background = Image.new("RGBA", img.size, (255, 255, 255, 255))
-        alpha_composite = Image.alpha_composite(background, img.convert("RGBA"))
+        img = Image.open(temp_png).convert("RGBA")
         
-        # 2. Convert to Grayscale
-        gray_img = alpha_composite.convert("L")
+        # Create our two blank 1-bit layers (White background = 255)
+        img_black = Image.new('1', img.size, 255)
+        img_red = Image.new('1', img.size, 255)
         
-        # 3. Apply a Hard Threshold (Avoids the ugly speckled dithering)
-        # 200 is a good sweet spot to turn the yellow suns black, while keeping the background white.
-        bw_img = gray_img.point(lambda p: 255 if p > 200 else 0, mode="1")
+        p_black = img_black.load()
+        p_red = img_red.load()
         
-        bw_img.save(bmp_path)
+        # Scan through the image pixel by pixel
+        for y in range(img.size[1]):
+            for x in range(img.size[0]):
+                r, g, b, a = img.getpixel((x, y))
+                
+                # Only process pixels that are mostly opaque
+                if a > 128: 
+                    # 1. Warm colors (Yellow sun, Orange lightning) -> Red Layer
+                    # High red/green, lower blue means yellow/orange
+                    if r > 150 and g > 120 and b < 100:
+                        p_red[x, y] = 0
+                        
+                    # 2. Dark colors (Cloud outlines, dark blue rain, night moon) -> Black Layer
+                    elif r < 180 and g < 180:
+                        p_black[x, y] = 0
+                        
+        # Save both layers
+        img_black.save(path_b)
+        img_red.save(path_r)
         os.remove(temp_png)
-        return bmp_path
+        
+        return {"black": path_b, "red": path_r}
+        
     except Exception as e:
         print(f"[-] Icon processing error: {e}")
         return None
@@ -115,9 +134,9 @@ def get_weather(api_key, city="Bhubaneswar,IN"):
         response.raise_for_status()
         data = response.json()
         
-        # Process the icon
+        # Process the icon into two layers!
         icon_id = data["weather"][0]["icon"]
-        icon_path = download_and_convert_icon(icon_id)
+        icon_paths = download_and_convert_icon(icon_id)
         
         parsed_data = {
             "city": data.get("name", city),
@@ -128,7 +147,7 @@ def get_weather(api_key, city="Bhubaneswar,IN"):
             "description": data["weather"][0]["description"].title(),
             "humidity": data["main"]["humidity"],
             "wind_speed": round(data["wind"]["speed"]),
-            "icon_path": icon_path
+            "icon_paths": icon_paths  # We are now saving the dictionary of paths
         }
         save_to_cache('weather.json', parsed_data)
         return parsed_data

@@ -174,9 +174,13 @@ def render_current_state(time_str, sensor_data):
                 draw_red.text((450, 60), weather["error"], font=font_med, fill=0)
             else:
                 # Weather Icon
-                if weather.get("icon_path") and os.path.exists(weather.get("icon_path")):
-                    weather_icon = Image.open(weather["icon_path"])
-                    img_black.paste(weather_icon, (450, 60))
+                paths = weather.get("icon_paths")
+                if paths and os.path.exists(paths["black"]) and os.path.exists(paths["red"]):
+                    weather_icon_black = Image.open(paths["black"])
+                    weather_icon_red = Image.open(paths["red"])
+                    
+                    img_black.paste(weather_icon_black, (450, 60))
+                    img_red.paste(weather_icon_red, (450, 60))
                 
                 # Big Temperature
                 draw_black.text((580, 60), f"{weather['temp']}°C", font=font_large, fill=0)
