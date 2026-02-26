@@ -23,20 +23,20 @@ def load_fonts():
         default = ImageFont.load_default()
         return default, default, default
 
-def get_sensor_string(dht_sensor):
-    """Safely reads the DHT11 sensor."""
+def get_sensor_data(dht_sensor):
+    """Safely reads the DHT11 sensor and returns a dictionary of raw values."""
     if not dht_sensor:
-        return "Sensor Not Configured"
+        return None
         
     for _ in range(3):
         try:
             temp = dht_sensor.temperature
             hum = dht_sensor.humidity
             if temp is not None and hum is not None:
-                return f"Temp: {temp}C  |  Hum: {hum}%"
+                return {"temp": temp, "hum": hum}
         except Exception:
             time.sleep(1.0)
-    return "Sensor Error"
+    return {"error": True}
 
 def get_partial_buffer(img):
     """Bypasses the driver's strict 800x480 size limit for cropped updates."""

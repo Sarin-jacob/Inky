@@ -63,37 +63,37 @@ def get_world_clocks():
 
 # --- WEATHER API (OpenWeatherMap) ---
 def download_and_convert_icon(icon_id):
-    """Downloads an OpenWeather icon and converts it to a 1-bit e-ink BMP."""
+    """Downloads an OpenWeather icon and converts it to a stark, crisp 1-bit BMP without dithering."""
     icon_dir = 'icons'
     os.makedirs(icon_dir, exist_ok=True)
     
     bmp_path = os.path.join(icon_dir, f"{icon_id}.bmp")
     
-    # If we already have it, just return the path
     if os.path.exists(bmp_path):
         return bmp_path
         
     try:
-        # Use @2x for a larger, crisper image
         url = f"http://openweathermap.org/img/wn/{icon_id}@2x.png"
         response = requests.get(url, stream=True, timeout=10)
         response.raise_for_status()
         
-        # Save temp PNG
         temp_png = os.path.join(icon_dir, f"temp_{icon_id}.png")
         with open(temp_png, 'wb') as f:
             f.write(response.content)
             
-        # Convert to 1-bit Black and White BMP
         img = Image.open(temp_png)
-        # Create a white background to replace transparency
-        background = Image.new("RGBA", img.size, (255, 255, 255))
+        # 1. Create a pure white background to replace the transparent alpha layer
+        background = Image.new("RGBA", img.size, (255, 255, 255, 255))
         alpha_composite = Image.alpha_composite(background, img.convert("RGBA"))
         
-        # Convert to pure 1-bit
-        bw_img = alpha_composite.convert("1")
-        bw_img.save(bmp_path)
+        # 2. Convert to Grayscale
+        gray_img = alpha_composite.convert("L")
         
+        # 3. Apply a Hard Threshold (Avoids the ugly speckled dithering)
+        # 200 is a good sweet spot to turn the yellow suns black, while keeping the background white.
+        bw_img = gray_img.point(lambda p: 255 if p > 200 else 0, mode="1")
+        
+        bw_img.save(bmp_path)
         os.remove(temp_png)
         return bmp_path
     except Exception as e:

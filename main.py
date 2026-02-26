@@ -10,7 +10,7 @@ import textwrap
 
 # Import our new modular tools
 from utils import load_state, save_state, register_mdns
-from display import push_full_update, push_partial_update, get_sensor_string, create_blank_layers, load_fonts
+from display import push_full_update, push_partial_update, get_sensor_data, create_blank_layers, load_fonts
 from app import create_app
 from api_handler import get_world_clocks, get_weather, get_todoist_tasks, get_picture_of_the_day, get_calendar_events
 
@@ -135,7 +135,7 @@ def setup_gpio():
         print(f"[-] FAILED GPIO Setup: {e}")
 
 # --- DISPLAY RENDERER ---
-def render_current_state(time_str, sensor_str):
+def render_current_state(time_str, sensor_data):
     """Builds the full screen image based on the current state and APIs."""
     img_black, img_red = create_blank_layers()
     draw_black, draw_red = ImageDraw.Draw(img_black), ImageDraw.Draw(img_red)
@@ -190,9 +190,26 @@ def render_current_state(time_str, sensor_str):
                 draw_black.text((450, 260), stats_str, font=font_small, fill=0)
 
             # --- BOTTOM: DHT11 SENSOR ---
-            # You can eventually replace 'S:' with a house/thermometer icon here!
-            draw_black.text((450, 380), "INDOOR SENSOR", font=font_small, fill=0)
-            draw_black.text((450, 410), sensor_str, font=font_med, fill=0)
+            if sensor_data is None:
+                draw_black.text((450, 410), "Sensor Not Configured", font=font_med, fill=0)
+            elif "error" in sensor_data:
+                draw_red.text((450, 410), "Sensor Read Error", font=font_med, fill=0)
+            else:
+                # Load your custom icon images
+                try:
+                    icon_thermo = Image.open("icons/thermo.png").convert("1").resize((24, 24))
+                    icon_drop = Image.open("icons/drop.png").convert("1").resize((24, 24))
+                    
+                    # Draw Thermometer Icon and Temp text
+                    img_red.paste(icon_thermo, (450, 410)) # Pasting to img_red makes the icon red!
+                    draw_black.text((485, 405), f"{sensor_data['temp']}°C", font=font_med, fill=0)
+                    
+                    # Draw Droplet Icon and Humidity text
+                    img_black.paste(icon_drop, (580, 410)) 
+                    draw_black.text((615, 405), f"{sensor_data['hum']}%", font=font_med, fill=0)
+                except Exception:
+                    # Fallback if you haven't downloaded the thermo.png/drop.png files yet
+                    draw_black.text((450, 405), f"T: {sensor_data['temp']}°C   H: {sensor_data['hum']}%", font=font_med, fill=0)
             
         elif mode == 2: # World Clock / Weather
             clocks = get_world_clocks()
@@ -209,7 +226,7 @@ def render_current_state(time_str, sensor_str):
                 draw_black.text((40, 220), f"{weather['temp']}°C - {weather['description']}", font=font_med, fill=0)
                 draw_black.text((40, 270), f"Feels like {weather['feels_like']}°C | Hum: {weather['humidity']}%", font=font_small, fill=0)
                 
-            draw_black.text((40, 400), sensor_str, font=font_med, fill=0)
+            # draw_black.text((40, 400), sensor_data, font=font_med, fill=0)
             
         elif mode == 3: # Custom API Push (B&W Only)
             api_img_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
@@ -382,7 +399,7 @@ def hardware_loop():
     
     while True:
         now_str = datetime.now().strftime("%I:%M %p")
-        sensor_str = get_sensor_string(dht_sensor)
+        sensor_data = get_sensor_data(dht_sensor)
         time_since_full = time.time() - last_full_refresh_time
         time_since_slide = time.time() - last_slide_change_time
 
@@ -411,7 +428,7 @@ def hardware_loop():
         # 2. Full Refresh (Button presses, page swaps, forced clears, or 1hr timeout)
         elif flag_full_refresh or time_since_full > 3600:
             print(f"[*] Dispatching FULL refresh. Page: {state['active_page']} | Mode: {state.get('active_mode', 1)}")
-            render_current_state(now_str, sensor_str)
+            render_current_state(now_str, sensor_data)
             
             flag_full_refresh = False
             last_drawn_time = now_str
