@@ -38,23 +38,19 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
                 <h2 class="text-lg font-semibold mb-4">Display Page</h2>
                 <form method="POST" action="/" class="space-y-3">
                     <input type="hidden" name="action" value="set_page">
-                    <button type="submit" name="page" value="1" 
-                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 1 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                    <button type="submit" name="page" value="1" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 1 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">1. The Daily Hub</span>
-                        <span class="text-xs text-slate-500">Time, Environment & API</span>
+                        <span class="text-xs text-slate-500">Time, Environment & Quotes</span>
                     </button>
-                    <button type="submit" name="page" value="2" 
-                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 2 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                    <button type="submit" name="page" value="2" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 2 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">2. Productivity</span>
                         <span class="text-xs text-slate-500">Tasks, Calendar & Notes</span>
                     </button>
-                    <button type="submit" name="page" value="3" 
-                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 3 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                    <button type="submit" name="page" value="3" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_page == 3 %}border-blue-500 ring-1 ring-blue-500 bg-blue-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">3. Art Gallery</span>
                         <span class="text-xs text-slate-500">Photos & API Images</span>
                     </button>
@@ -66,8 +62,7 @@
                 <form method="POST" action="/" class="space-y-3">
                     <input type="hidden" name="action" value="set_mode">
                     
-                    <button type="submit" name="mode" value="1" 
-                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 1 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                    <button type="submit" name="mode" value="1" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 1 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">Mode 1</span>
                         <span class="text-xs text-slate-500">
                             {% if state.active_page == 1 %}Minimalist Clock
@@ -76,18 +71,16 @@
                         </span>
                     </button>
                     
-                    <button type="submit" name="mode" value="2" 
-                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                    <button type="submit" name="mode" value="2" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 2 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">Mode 2</span>
                         <span class="text-xs text-slate-500">
-                            {% if state.active_page == 1 %}World Clock & Weather
+                            {% if state.active_page == 1 %}Daily Quotes & World Clocks
                             {% elif state.active_page == 2 %}Calendar Agenda
                             {% else %}Local Slideshow{% endif %}
                         </span>
                     </button>
                     
-                    <button type="submit" name="mode" value="3" 
-                            class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 3 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
+                    <button type="submit" name="mode" value="3" class="w-full text-left px-4 py-3 rounded-lg border {% if state.active_mode == 3 %}border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50{% else %}border-slate-200 hover:bg-slate-50{% endif %} transition">
                         <span class="font-medium block">Mode 3</span>
                         <span class="text-xs text-slate-500">
                             {% if state.active_page == 1 %}Custom API Push (B&W)
@@ -102,7 +95,6 @@
         <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
             <h2 class="text-lg font-semibold mb-2">Slideshow Management</h2>
             <p class="text-sm text-slate-500 mb-4">Upload and manage pre-processed images for the Local Slideshow (Page 3, Mode 2).</p>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <form method="POST" action="/api/slides/upload" enctype="multipart/form-data" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -113,22 +105,41 @@
                             Process & Upload Slide
                         </button>
                     </form>
-
                     <form method="POST" action="/api/slides/interval" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                         <label class="block text-xs font-medium text-slate-700 mb-2">Time Between Slides (Seconds)</label>
                         <div class="flex gap-2">
                             <input type="number" name="interval" id="slide-interval" value="3600" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500">
-                            <button type="submit" class="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 transition">
-                                Save
-                            </button>
+                            <button type="submit" class="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-100 transition">Save</button>
                         </div>
                     </form>
                 </div>
-
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col h-full">
                     <label class="block text-xs font-medium text-slate-700 mb-2">Saved Slides</label>
                     <div id="slide-list" class="space-y-2 overflow-y-auto max-h-48 flex-grow">
                         <p class="text-xs text-slate-400 italic">Loading slides...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <h2 class="text-lg font-semibold mb-2">Quotes Management</h2>
+            <p class="text-sm text-slate-500 mb-4">Upload CSV files containing your quotes (Page 1, Mode 2). Format must include headers: <code>id,person,quote</code>.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <form method="POST" action="/api/quotes/upload" enctype="multipart/form-data" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <label class="block text-xs font-medium text-slate-700 mb-2">Upload Quotes CSV</label>
+                        <input type="file" name="csv_file" accept=".csv" required
+                               class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer mb-3"/>
+                        <button type="submit" class="w-full bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
+                            Upload CSV
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col h-full">
+                    <label class="block text-xs font-medium text-slate-700 mb-2">Available CSV Files</label>
+                    <div id="quote-list" class="space-y-2 overflow-y-auto max-h-48 flex-grow">
+                        <p class="text-xs text-slate-400 italic">Loading quotes...</p>
                     </div>
                 </div>
             </div>
@@ -142,31 +153,52 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Productivity</h3>
-                        
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Todoist API Token</label>
                             <input type="password" name="todoist_api_key" value="" placeholder="{% if state.todoist_api_key %}(unchanged){% else %}Bearer token...{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Calendar iCal URL (.ics)</label>
                             <input type="text" name="calendar_ical_url" value="{{ state.calendar_ical_url | default('') }}" placeholder="https://calendar.google.com/..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Scratchpad Note</label>
                             <textarea name="scratchpad_text" rows="3" placeholder="Buy milk, walk dog..." class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">{{ state.scratchpad_text | default('') }}</textarea>
+                        </div>
+
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mt-6">World Clocks</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-medium text-slate-500 mb-1">Clock 1 Name</label>
+                                <input type="text" name="tz1_name" value="{{ state.tz1_name | default('CEST') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-medium text-slate-500 mb-1">Zone (e.g., Europe/Paris)</label>
+                                <input type="text" name="tz1_zone" value="{{ state.tz1_zone | default('Europe/Paris') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            </div>
+                            
+                            <div>
+                                <input type="text" name="tz2_name" value="{{ state.tz2_name | default('NY') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            </div>
+                            <div>
+                                <input type="text" name="tz2_zone" value="{{ state.tz2_zone | default('America/New_York') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            </div>
+                            
+                            <div>
+                                <input type="text" name="tz3_name" value="{{ state.tz3_name | default('TYO') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            </div>
+                            <div>
+                                <input type="text" name="tz3_zone" value="{{ state.tz3_zone | default('Asia/Tokyo') }}" class="w-full rounded-md border-slate-300 border p-2 text-sm">
+                            </div>
                         </div>
                     </div>
 
                     <div class="space-y-4">
                         <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Environment & Art</h3>
-                        
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">OpenWeather API Key</label>
                             <input type="password" name="openweather_api_key" value="" placeholder="{% if state.openweather_api_key %}(unchanged){% else %}OpenWeather key...{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Picture of the Day Source</label>
                             <select name="potd_source" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500 bg-white">
@@ -175,7 +207,6 @@
                                 <option value="unsplash" {% if state.potd_source == 'unsplash' %}selected{% endif %}>Unsplash (Nature)</option>
                             </select>
                         </div>
-
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Unsplash API Key</label>
                             <input type="password" name="unsplash_api_key" value="" placeholder="{% if state.unsplash_api_key %}(unchanged){% else %}Unsplash Client ID...{% endif %}" class="w-full rounded-md border-slate-300 border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
@@ -196,8 +227,7 @@
                 <h2 class="text-lg font-semibold mb-2">Single Photo Upload</h2>
                 <p class="text-sm text-slate-500 mb-4">Set the static photo for Page 3, Mode 1.</p>
                 <form method="POST" action="/media" enctype="multipart/form-data" class="flex flex-col gap-3">
-                    <input type="file" name="image" accept="image/jpeg, image/png" required
-                           class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
+                    <input type="file" name="image" accept="image/jpeg, image/png" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
                     <button type="submit" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition shadow-sm w-full md:w-auto self-start">
                         Set Static Photo
                     </button>
@@ -244,6 +274,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            
+            // 1. Fetch Slideshow Data
             fetch('/api/slides')
                 .then(response => response.json())
                 .then(data => {
@@ -256,7 +288,7 @@
                             list.innerHTML += `
                                 <div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200 shadow-sm mb-2">
                                     <div class="flex items-center gap-3">
-                                        <img src="/api/slides/thumb/${slide}" class="w-16 h-10 object-cover rounded shadow-sm border border-slate-200 bg-slate-100" alt="Slide Thumbnail" onerror="this.style.display='none'">
+                                        <img src="/api/slides/thumb/${slide}" class="w-16 h-10 object-cover rounded shadow-sm border border-slate-200 bg-slate-100" alt="Thumb" onerror="this.style.display='none'">
                                         <span class="text-xs font-mono text-slate-600 truncate">ID: ${slide}</span>
                                     </div>
                                     <button onclick="deleteSlide('${slide}')" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded text-xs font-bold transition">Delete</button>
@@ -269,11 +301,59 @@
                     }
                 })
                 .catch(err => console.error('Error fetching slides:', err));
+
+            // 2. Fetch Quotes CSV Data
+            fetch('/api/quotes')
+                .then(response => response.json())
+                .then(data => {
+                    const qList = document.getElementById('quote-list');
+                    qList.innerHTML = '';
+                    if(data.available_csvs.length === 0) {
+                        qList.innerHTML = '<p class="text-sm text-slate-500 italic mt-2">No CSV files uploaded yet.</p>';
+                    } else {
+                        data.available_csvs.forEach(csvFile => {
+                            const isActive = (csvFile === data.active_csv);
+                            const activeBadge = isActive ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold ml-2">ACTIVE</span>` : '';
+                            
+                            qList.innerHTML += `
+                                <div class="flex justify-between items-center bg-white p-2 rounded border ${isActive ? 'border-emerald-300' : 'border-slate-200'} shadow-sm mb-2">
+                                    <div class="flex items-center truncate">
+                                        <span class="text-sm font-medium text-slate-700 truncate">${csvFile}</span>
+                                        ${activeBadge}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        ${!isActive ? `<button onclick="setActiveCsv('${csvFile}')" class="text-blue-500 hover:bg-blue-50 px-2 py-1 rounded text-xs font-bold transition">Set Active</button>` : ''}
+                                        <button onclick="deleteCsv('${csvFile}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded text-xs font-bold transition">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                })
+                .catch(err => console.error('Error fetching quotes:', err));
         });
 
+        // Action Handlers
         function deleteSlide(slideId) {
             if(confirm('Are you sure you want to delete this slide?')) {
                 fetch(`/api/slides/delete/${slideId}`, { method: 'POST' })
+                    .then(() => window.location.reload());
+            }
+        }
+
+        function setActiveCsv(filename) {
+            const formData = new URLSearchParams();
+            formData.append('filename', filename);
+            fetch(`/api/quotes/active`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            }).then(() => window.location.reload());
+        }
+
+        function deleteCsv(filename) {
+            if(confirm(`Are you sure you want to delete ${filename}?`)) {
+                fetch(`/api/quotes/delete/${filename}`, { method: 'POST' })
                     .then(() => window.location.reload());
             }
         }
