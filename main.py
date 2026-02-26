@@ -505,7 +505,7 @@ def hardware_loop():
             img_black_temp, _ = create_blank_layers()
             draw_temp = ImageDraw.Draw(img_black_temp)
             draw_temp.text((540, 440), f"Local: {now_str}", font=font_small, fill=0)
-            lbbox = (540, 440, 740, 510) 
+            lbbox = (540, 440, 700, 480) 
             push_partial_update(img_black_temp, *lbbox)
             last_drawn_time = now_str
         
