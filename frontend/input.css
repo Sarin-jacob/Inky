@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @source "./index.html";
 
+/* 1. Restores: darkMode: 'class' */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 2. Restores: theme.extend.fontFamily */
+@theme {
+  /* To override the default sans font: */
+  --font-sans: "Inter", system-ui, sans-serif;
+  
+  /* To create a brand new custom font class (e.g., 'font-heading'): */
+  --font-heading: "Oswald", sans-serif; 
+}
+
+/* Your custom CSS */
 body { 
   transition: background-color 0.3s ease, color 0.3s ease; 
 }
