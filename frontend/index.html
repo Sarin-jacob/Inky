@@ -165,7 +165,7 @@
                         <form method="POST" action="/api/slides/interval" class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Time Between Slides (Sec)</label>
                             <div class="flex gap-2">
-                                <input type="number" name="interval" id="slide-interval" value="3600" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                <input type="number" name="interval" id="slide-interval" value="3600" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                                 <button type="submit" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-sm">Save</button>
                             </div>
                         </form>
@@ -235,15 +235,15 @@
                         
                         <div>
                             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Todoist API Token</label>
-                            <input type="password" name="todoist_api_key" value="" placeholder="{% if state.todoist_api_key %}(unchanged){% else %}Bearer token...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            <input type="password" name="todoist_api_key" value="" placeholder="{% if state.todoist_api_key %}(unchanged){% else %}Bearer token...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Calendar iCal URL (.ics)</label>
-                            <input type="text" name="calendar_ical_url" value="{{ state.calendar_ical_url | default('') }}" placeholder="https://calendar.google.com/..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            <input type="text" name="calendar_ical_url" value="{{ state.calendar_ical_url | default('') }}" placeholder="https://calendar.google.com/..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Scratchpad Note</label>
-                            <textarea name="scratchpad_text" rows="3" placeholder="Buy milk, walk dog..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">{{ state.scratchpad_text | default('') }}</textarea>
+                            <textarea name="scratchpad_text" rows="3" placeholder="Buy milk, walk dog..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">{{ state.scratchpad_text | default('') }}</textarea>
                         </div>
 
                         <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2 mt-8">
@@ -254,25 +254,25 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Clock 1 Name</label>
-                                <input type="text" name="tz1_name" value="{{ state.tz1_name | default('CEST') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                                <input type="text" name="tz1_name" value="{{ state.tz1_name | default('CEST') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1">Zone (e.g., Europe/Paris)</label>
-                                <input type="text" name="tz1_zone" value="{{ state.tz1_zone | default('Europe/Paris') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                                <input type="text" name="tz1_zone" value="{{ state.tz1_zone | default('Europe/Paris') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                             </div>
                             
                             <div>
-                                <input type="text" name="tz2_name" value="{{ state.tz2_name | default('NY') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                                <input type="text" name="tz2_name" value="{{ state.tz2_name | default('NY') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                             </div>
                             <div>
-                                <input type="text" name="tz2_zone" value="{{ state.tz2_zone | default('America/New_York') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                                <input type="text" name="tz2_zone" value="{{ state.tz2_zone | default('America/New_York') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                             </div>
                             
                             <div>
-                                <input type="text" name="tz3_name" value="{{ state.tz3_name | default('TYO') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                                <input type="text" name="tz3_name" value="{{ state.tz3_name | default('TYO') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                             </div>
                             <div>
-                                <input type="text" name="tz3_zone" value="{{ state.tz3_zone | default('Asia/Tokyo') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 transition-colors">
+                                <input type="text" name="tz3_zone" value="{{ state.tz3_zone | default('Asia/Tokyo') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500  transition-colors focus:outline-none">
                             </div>
                         </div>
                     </div>
@@ -285,11 +285,11 @@
                         
                         <div>
                             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">OpenWeather API Key</label>
-                            <input type="password" name="openweather_api_key" value="" placeholder="{% if state.openweather_api_key %}(unchanged){% else %}OpenWeather key...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            <input type="password" name="openweather_api_key" value="" placeholder="{% if state.openweather_api_key %}(unchanged){% else %}OpenWeather key...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Picture of the Day Source</label>
-                            <select name="potd_source" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none">
+                            <select name="potd_source" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none">
                                 <option value="nasa" {% if state.potd_source == 'nasa' %}selected{% endif %}>NASA (Astronomy)</option>
                                 <option value="reddit" {% if state.potd_source == 'reddit' %}selected{% endif %}>Reddit (Earth)</option>
                                 <option value="unsplash" {% if state.potd_source == 'unsplash' %}selected{% endif %}>Unsplash (Nature)</option>
@@ -297,7 +297,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Unsplash API Key</label>
-                            <input type="password" name="unsplash_api_key" value="" placeholder="{% if state.unsplash_api_key %}(unchanged){% else %}Unsplash Client ID...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                            <input type="password" name="unsplash_api_key" value="" placeholder="{% if state.unsplash_api_key %}(unchanged){% else %}Unsplash Client ID...{% endif %}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-blue-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                         </div>
                     </div>
                 </div>
@@ -366,14 +366,14 @@
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">Network SSID</label>
                     <div class="relative">
                         <i data-lucide="wifi" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-                        <input type="text" name="ssid" placeholder="MyWiFi" class="w-full pl-9 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <input type="text" name="ssid" placeholder="MyWiFi" class="w-full pl-9 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
                     <div class="relative">
                         <i data-lucide="lock" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-                        <input type="password" name="password" value="" placeholder="{% if state.wifi_configured %}(unchanged){% else %}••••••••{% endif %}" class="w-full pl-9 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                        <input type="password" name="password" value="" placeholder="{% if state.wifi_configured %}(unchanged){% else %}••••••••{% endif %}" class="w-full pl-9 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors focus:outline-none">
                     </div>
                 </div>
                 <button type="submit" class="flex justify-center items-center gap-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-600 transition shadow-sm w-full">
