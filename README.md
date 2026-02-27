@@ -112,8 +112,11 @@ sudo uv run main.py
 
 ### Web Interface & Configuration
 
-* Open a browser on your network and navigate to `http://Inky.local` (or the Pi's IP address).
+* Open a browser on your network and navigate to `http://inky.local` (or the Pi's IP address).
 * Use the dashboard to input your API keys (Todoist, OpenWeather, etc.), upload photos, manage your slideshow interval, and set up Wi-Fi.
+* Inky have another trick up its sleeve, If Inky dosent find or cannot connect to know wireless network it would create a fallback Ap with the following Credentials
+    - SSID : `Inky_Hotspot`
+    - Passd: `SecurePass123`
 
 ### Hardware Button Navigation
 
@@ -127,7 +130,7 @@ sudo uv run main.py
 You can instantly update the screen from another machine on your network by sending a B&W image to the API.
 
 ```bash
-curl -X POST -F "image=@my_custom_graph.png" http://Inky.local/api/push_image
+curl -X POST -F "image=@my_custom_graph.png" http://inky.local/api/push_image
 ```
 #### Example:
 Download [system_usage.py](https://github.com/Sarin-jacob/Inky/blob/main/plugins/system_usage.py) and run the following after setting Inky to `Api push Mode`.
