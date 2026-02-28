@@ -23,6 +23,7 @@ dependencies = [
     "tzdata>=2025.3",
     "icalendar>=7.0.2",
     "recurring-ical-events>=3.8.1",
+    "flask-cors"
 ]
 
 [tool.uv.extra-build-dependencies]

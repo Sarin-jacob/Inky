@@ -3,6 +3,7 @@ import time
 import glob
 from PIL import Image
 from flask import Flask, render_template, request, redirect, url_for, jsonify,send_from_directory
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from utils import save_state, setup_new_wifi, ensure_fallback_ap, process_upload, calculate_bw_diff
 
@@ -24,6 +25,7 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
     """
     app = Flask(__name__)
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16MB max upload
+    CORS(app)
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
