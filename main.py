@@ -457,13 +457,13 @@ def hardware_loop():
         # 1. API Push Partial Update (Page 1, Mode 3 B&W Diff)
         if flag_partial_refresh and partial_bbox:
             print(f"[*] Executing targeted API partial update for box: {partial_bbox}")
+            flag_partial_refresh = False
+            partial_bbox = None
             api_img_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
             if os.path.exists(api_img_path):
                 img_black = Image.open(api_img_path)
                 push_partial_update(img_black, *partial_bbox)
                 
-            flag_partial_refresh = False
-            partial_bbox = None
             last_drawn_time = now_str # Prevent the clock from interfering
 
         # 2. Full Refresh (Button presses, page swaps, forced clears, or 1hr timeout)
