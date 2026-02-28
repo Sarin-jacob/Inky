@@ -20,7 +20,26 @@ if [ ! -f "$VENV_PYTHON" ]; then
     exit 1
 fi
 
-# 4. Generate the systemd service file
+# 4. Check for and generate SSL Certificates for HTTPS
+CERT_FILE="$PROJECT_DIR/cert.pem"
+KEY_FILE="$PROJECT_DIR/key.pem"
+
+if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    echo "[*] SSL certificates not found. Generating self-signed certificates for HTTPS..."
+    # Generate a 10-year self-signed cert silently
+    openssl req -x509 -newkey rsa:4096 -nodes -out "$CERT_FILE" -keyout "$KEY_FILE" -days 3650 -subj "/CN=inky.local" 2>/dev/null
+    
+    if [ $? -eq 0 ]; then
+        echo "[+] Certificates (cert.pem, key.pem) generated successfully."
+    else
+        echo "[-] Failed to generate certificates. Please ensure openssl is installed (apt-get install openssl)."
+        exit 1
+    fi
+else
+    echo "[+] SSL certificates already exist. Skipping generation."
+fi
+
+# 5. Generate the systemd service file
 SERVICE_FILE="/etc/systemd/system/Inky.service"
 
 cat <<EOF > $SERVICE_FILE
@@ -45,7 +64,7 @@ EOF
 
 echo "[+] Service file created at $SERVICE_FILE"
 
-# 5. Reload systemd, enable, and start the service
+# 6. Reload systemd, enable, and start the service
 echo "[*] Reloading systemd daemon..."
 systemctl daemon-reload
 

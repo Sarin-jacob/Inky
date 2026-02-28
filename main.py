@@ -528,10 +528,21 @@ if __name__ == '__main__':
     # Create the Flask App and pass in our state and thread-safe triggers
     app = create_app(state, trigger_full_refresh, trigger_partial_refresh)
     
-    # Run Flask in a daemonized background thread so it doesn't block the hardware loop
-    web_thread = threading.Thread(target=lambda: app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False))
-    web_thread.daemon = True
-    web_thread.start()
+    http_thread = threading.Thread(
+        target=lambda: app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False)
+    )
+    http_thread.daemon = True
+    http_thread.start()
+    print("[*] HTTP Web UI listening on port 80")
+
+    # 2. Run HTTPS (Port 443) in a daemonized background thread
+    # This uses the cert.pem and key.pem generated automatically by install.sh
+    https_thread = threading.Thread(
+        target=lambda: app.run(host='0.0.0.0', port=443, debug=False, use_reloader=False, ssl_context=('cert.pem', 'key.pem'))
+    )
+    https_thread.daemon = True
+    https_thread.start()
+    print("[*] HTTPS Web API listening on port 443")
     
     try:
         print("[*] Starting main hardware loop...")
