@@ -459,7 +459,7 @@ def hardware_loop():
             print(f"[*] Executing targeted API partial update for box: {partial_bbox}")
             api_img_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
             if os.path.exists(api_img_path):
-                img_black = Image.open(api_img_path).convert('1').resize((800, 480))
+                img_black = Image.open(api_img_path)
                 push_partial_update(img_black, *partial_bbox)
                 
             flag_partial_refresh = False
