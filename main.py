@@ -267,7 +267,7 @@ def render_current_state(time_str, sensor_data):
         elif mode == 3: # Custom API Push (B&W Only)
             api_img_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
             if os.path.exists(api_img_path):
-                api_img = Image.open(api_img_path).convert('1').resize((800, 480))
+                api_img = Image.open(api_img_path)
                 img_black.paste(api_img, (0, 0))
             else:
                 draw_black.text((150, 200), "WAITING FOR API PUSH", font=font_large, fill=0)
@@ -519,7 +519,7 @@ def hardware_loop():
             last_drawn_time = now_str
         
             
-        time.sleep(0.5)
+        time.sleep(0.2)
 
 if __name__ == '__main__':
     setup_gpio()

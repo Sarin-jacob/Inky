@@ -258,7 +258,7 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         file = request.files['image']
         current_image_path = os.path.join(UPLOAD_DIR, 'api_current.bmp')
         
-        # Check if this is the first push before we overwrite the file
+        # Check if this is the first push before we overwrite the file 
         is_first_push = not os.path.exists(current_image_path)
         
         try:
