@@ -252,7 +252,8 @@ def create_app(state_ref, trigger_full_refresh, trigger_partial_refresh):
         if state_ref.get('active_page') != 1 or state_ref.get('active_mode') != 3:
             return jsonify({"error": "Device is not currently in API Push mode (Page 1, Mode 3)."}), 403
         
-        if request.form.get('retrig', 'false').lower() == 'true': 
+        if request.form.get('retrig', 'false').lower() == 'true':
+            print("Triggered retrigg")
             trigger_partial_refresh((0, 0, 800, 480))
             return jsonify({"status" : "success"}), 200
         
